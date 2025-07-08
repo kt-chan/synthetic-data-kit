@@ -8,4 +8,5 @@ __pycache__
 .env.example
 .DS_Store
 .git
+data
 config.yaml

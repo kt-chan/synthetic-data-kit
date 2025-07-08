@@ -9,6 +9,20 @@ import json
 import os
 from typing import List, Dict, Any, Optional
 
+
+def parse_summary(text: str) -> List[Dict[str, str]]:
+    """Parse QA pairs from LLM output with enhanced error handling"""
+    verbose = os.environ.get('SDK_VERBOSE', 'false').lower() == 'true'
+    
+    if verbose:
+        print(f"Parsing response of length {len(text)}")
+
+    # Try to clean up the JSON to fix common issues
+    cleaned_text = re.sub(r'(\n\s*|\r\s*)', ' ', text)  # Remove newlines and extra spaces
+    cleaned_text = re.sub(r',(\s*\}|\s*\])', r'\1', cleaned_text)  # Remove trailing commas
+    return cleaned_text
+
+
 def parse_qa_pairs(text: str) -> List[Dict[str, str]]:
     """Parse QA pairs from LLM output with enhanced error handling"""
     verbose = os.environ.get('SDK_VERBOSE', 'false').lower() == 'true'

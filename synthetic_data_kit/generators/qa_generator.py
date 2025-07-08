@@ -15,6 +15,7 @@ from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, Ti
 from synthetic_data_kit.models.llm_client import LLMClient
 from synthetic_data_kit.utils.text import split_into_chunks
 from synthetic_data_kit.utils.llm_processing import (
+    parse_summary,
     parse_qa_pairs,
     parse_ratings,
     convert_to_conversation_format,
@@ -39,48 +40,6 @@ class QAGenerator:
         self.generation_config = get_generation_config(self.config)
         self.curate_config = get_curate_config(self.config)
 
-    def summarize_inference(self, text_chunks: list[str]):
-        # Get summary prompt from config
-        verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
-        if verbose:
-            print("Generating document summary...")
-
-        prompt = get_prompt(self.config, "summary")
-
-        messages = [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": text_chunks},
-        ]
-
-        summary = self.client.chat_completion(
-            messages, temperature=0.1  # Use lower temperature for summaries
-        )
-
-        if verbose:
-            print(f"Summary generated ({len(summary)} chars)")
-        return summary
-
-    # Function to summarize each chunk using a language model
-    def summarize_chunks(self, chunks: List[str]) -> List[str]:
-        """
-        Summarizes each chunk using a pre-trained summarization model.
-        """
-        summaries = []
-
-        for chunk in chunks:
-            summary = self.summarize_inference(chunk)
-            summaries.append(summary)
-
-        return summaries
-
-    # Function to combine summaries into a single summary
-    def combine_summaries(self, summaries: List[str]) -> str:
-        """
-        Combines the summaries of each chunk into a single cohesive summary.
-        """
-        combined_summary = "\n".join(summaries)
-        return combined_summary
-
     def split_article_into_chunks(self, document_text: str) -> List[str]:
         """Split text into chunks with optional overlap"""
         # Get generation config
@@ -90,32 +49,62 @@ class QAGenerator:
         chunks = split_into_chunks(document_text, chunk_size=chunk_size, overlap=overlap)
         return chunks
 
-    def generate_chunk_summary(self, document_text: str) -> str:
-        """Generate a summary of the document by chunk"""
-        # Step 1: Split the article into chunks
-        chunks = self.split_article_into_chunks(document_text)
-
-        # Step 2: Summarize each chunk
-        summaries = self.summarize_chunks(chunks)
-
-        # Step 3: Combine the summaries
-        final_summary = self.combine_summaries(summaries)
-
-        return final_summary
-
     def generate_summary(self, document_text: str) -> str:
         """Generate a summary of the document"""
-        summaries = self.generate_chunk_summary(document_text)
-        return 
+        verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
+        batch_size = self.generation_config.get("batch_size", 32)
+
+        # Split text into chunks
+        chunks = self.split_article_into_chunks(document_text)
+        if verbose:
+            print(f"Generating Summary Sections ...")
+            print(f"Document split into {len(chunks)} chunks")
+            print(f"Using batch size of {batch_size}")
+
+        # Get summary generation prompt template
+        summary_prompt_template = get_prompt(self.config, "summary")
+        messages = []
+
+        if len(chunks) > 1:
+            # Prepare all message batches for each chunk section summary
+            all_messages = []
+            for i, chunk in enumerate(chunks):
+                # Format the prompt with summary and text
+                messages = [
+                    {"role": "system", "content": summary_prompt_template},
+                    {"role": "user", "content": chunk},
+                ]
+                all_messages.append(messages)
+
+            print(f"Cut a doc size of {len(document_text)} into {len(chunks)} chunks to generate summary...")
+            summaries = self.batch_inference(all_messages, chunks, parse_summary)
+            combined_summary = "\n".join(summaries)
+
+            # Get summary generation prompt template for consolidation
+            messages = [
+                {"role": "system", "content": summary_prompt_template},
+                {"role": "user", "content": combined_summary},
+            ]
+        else:
+            messages = [
+                {"role": "system", "content": summary_prompt_template},
+                {"role": "user", "content": document_text},
+            ]
+
+        print(f"Summarizing chunks sector output of {len(combined_summary)} ...")
+        consolidated_summary = self.client.chat_completion(
+            messages, temperature=0.1  # Use lower temperature for summaries
+        )
+
+        return consolidated_summary
 
     def generate_qa_pairs(
         self, document_text: str, summary: str, num_pairs: int = 25
     ) -> List[Dict[str, str]]:
         """Generate QA pairs from the document using batched processing"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
-        temperature = self.generation_config.get("temperature", 0.7)
         batch_size = self.generation_config.get("batch_size", 32)
-        
+
         # Split text into chunks
         chunks = self.split_article_into_chunks(document_text)
 
@@ -124,7 +113,6 @@ class QAGenerator:
             print(f"Document split into {len(chunks)} chunks")
             print(f"Using batch size of {batch_size}")
 
-        all_qa_pairs = []
         pairs_per_chunk = max(1, round(num_pairs / len(chunks)))
 
         # Get QA generation prompt template
@@ -135,14 +123,20 @@ class QAGenerator:
         for i, chunk in enumerate(chunks):
             # Format the prompt with summary and text
             qa_prompt = qa_prompt_template.format(
-                num_pairs=pairs_per_chunk, summary=summary[:100], text=chunk
+                num_pairs=pairs_per_chunk, summary=summary[:1000], text=chunk
             )
 
             messages = [{"role": "system", "content": qa_prompt}]
             all_messages.append(messages)
 
-        print(f"Processing {len(chunks)} chunks to generate QA pairs...")
+        print(f"Processing {len(chunks)} chunks to generate QA pairs with {pairs_per_chunk} each...")
+        return self.batch_inference(all_messages, chunks, parse_qa_pairs)
 
+    def batch_inference(self, all_messages: str, chunks: List[str], taskFunc) -> List[Dict[str, str]]:
+        """Inference using batched processing"""
+        verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
+        temperature = self.generation_config.get("temperature", 0.7)
+        batch_size = self.generation_config.get("batch_size", 32)
         # Set up progress tracking based on verbose mode
         if verbose:
             from rich.progress import (
@@ -162,12 +156,15 @@ class QAGenerator:
             ]
 
             progress_ctx = Progress(*progress_columns)
-            generate_task = progress_ctx.add_task(f"Generating QA pairs", total=len(chunks))
+            generate_task = progress_ctx.add_task(
+                f"Generating batch inference output", total=len(chunks)
+            )
             progress_ctx.start()
         else:
             progress_ctx = None
             generate_task = None
 
+        all_inference_outputs = []
         # Process in batches
         for batch_start in range(0, len(chunks), batch_size):
             batch_end = min(batch_start + batch_size, len(chunks))
@@ -194,11 +191,14 @@ class QAGenerator:
                 # Process each response in the batch
                 for j, response in enumerate(batch_responses):
                     chunk_index = batch_start + j
-                    chunk_pairs = parse_qa_pairs(response)
-                    all_qa_pairs.extend(chunk_pairs)
+                    chunk_pairs = taskFunc(response)
+                    if isinstance(chunk_pairs, list):
+                        all_inference_outputs.extend(chunk_pairs)
+                    else:
+                        all_inference_outputs.append(chunk_pairs)
 
                     if verbose:
-                        print(f"  Generated {len(chunk_pairs)} pairs from chunk {chunk_index+1}")
+                        print(f"Generated {len(chunk_pairs)} pairs from chunk {chunk_index+1}")
 
                 # Update progress bar if in verbose mode
                 if progress_ctx and generate_task:
@@ -222,8 +222,8 @@ class QAGenerator:
             print("Batch processing complete.")
 
         # Always print summary information, even in non-verbose mode
-        print(f"Generated {len(all_qa_pairs)} QA pairs total")
-        return all_qa_pairs
+        print(f"Generated {len(all_inference_outputs)} chunks output in total")
+        return all_inference_outputs
 
     def rate_qa_pairs(
         self, qa_pairs: List[Dict[str, str]], summary: str, threshold: Optional[float] = None
