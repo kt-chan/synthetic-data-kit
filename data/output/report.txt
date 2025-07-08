@@ -1,0 +1,1355 @@
+REGIONAL ANESTHESIA AND ACUTE PAIN
+
+SPECIAL ARTICLE
+
+The Third American Society of Regional Anesthesia and
+Pain Medicine Practice Advisory on Local Anesthetic
+Systemic Toxicity
+Executive Summary 2017
+
+Joseph M. Neal, MD,* Michael J. Barrington, MBBS, FANZCA, PhD,† Michael R. Fettiplace, MD, PhD,‡§
+Marina Gitman, MD,§ Stavros G. Memtsoudis, MD, PhD,|| Eva E. Mörwald, MD,||
+Daniel S. Rubin, MD,** and Guy Weinberg, MD§††
+
+Abstract: The American Society of Regional Anesthesia and Pain Med-
+icine's Third Practice Advisory on local anesthetic systemic toxicity is an
+interim update from its 2010 advisory. The advisory focuses on new infor-
+mation regarding the mechanisms of lipid resuscitation, updated frequency
+estimates, the preventative role of ultrasound guidance, changes to case
+presentation patterns, and limited information related to local infiltration
+anesthesia and liposomal bupivacaine. In addition to emerging information,
+the advisory updates recommendations pertaining to prevention, recognition,
+and treatment of local anesthetic systemic toxicity.
+
+What’s New in This Update? This interim update summarizes recent
+scientific findings that have enhanced our understanding of the mechanisms
+that lead to lipid emulsion reversal of LAST, including rapid partitioning, di-
+rect inotropy, and post-conditioning. Since the previous practice advisory,
+epidemiological data have emerged that suggest a lower frequency of
+LAST as reported by single institutions and some registries, nevertheless
+a considerable number of events still occur within the general community.
+Contemporary case reports suggest a trend toward delayed presentation,
+which may mirror the increased use of ultrasound guidance (fewer intra-
+vascular injections), local infiltration techniques (slower systemic uptake),
+and continuous local anesthetic infusions. Small patient size and sarcopenia
+are additional factors that increase potential risk for LAST. An increasing
+number of reported events occur outside of the traditional hospital setting
+and involve non-anesthesiologists.
+
+(Reg Anesth Pain Med 2018;43: 113–123)
+
+I nterventions involving local anesthetics are ubiquitous through-
+
+out medicine and are performed by anesthesiologists, other
+physicians, dentists, and paramedical personnel. Local anesthetic
+systemic toxicity (LAST) remains a serious adverse event despite
+advances in prevention, detection, and treatment. Such events range
+across a continuum from mild subjective prodromal symptoms
+to seizure, cardiac arrest, and/or death. As noted in our previous
+
+From the *Virginia Mason Medical Center, Seattle, WA; †St Vincent's Hospital,
+University of Melbourne, Melbourne, Australia; ‡Massachusetts General Hospi-
+tal, Boston, MA; §College of Medicine, University of Illinois, Chicago; ||Hospital
+for Special Surgery, Weill Cornell Medical College, New York, NY; **University
+of Chicago; and ††Jesse Brown VA Medical Center, Chicago, IL.
+Accepted for publication November 15, 2017.
+Address correspondence to: Joseph M. Neal, MD, 1100 Ninth Ave (B2-AN),
+
+Seattle, WA 98111 (e‐mail: Joseph.Neal@virginiamason.org).
+
+G.W. is an officer, director, shareholder and paid consultant of ResQ Pharma,
+Inc. He also created and maintains www.lipidrescue.org, an educational
+web site. The authors otherwise declare no potential conflict of interest.
+
+This article discusses an off-label use of lipid emulsion (eg, Intralipid) for
+
+treatment of local anesthetic systemic toxicity.
+
+Copyright © 2018 by American Society of Regional Anesthesia and Pain
+
+Medicine
+ISSN: 1098-7339
+DOI: 10.1097/AAP.0000000000000720
+
+practice advisory, “a variety of factors influence the likelihood
+and severity of LAST, including individual patient risk factors,
+concurrent medications, location and technique of block, specific
+local anesthetic compound, total local anesthetic dose (the product
+of concentration x volume), timeliness of detection, and adequacy
+of treatment.”1 The overall rarity of LAST and the fact that epi-
+sodes can occur despite proper technique argue strongly for edu-
+cation and preparedness among all professionals who administer
+local anesthetics to their patients.
+
+The American Society of Regional Anesthesia and Pain Med-
+icine (ASRA) convened its first Conference on Local Anesthetic
+Toxicity in 2001 coinciding with initial clinical experience after
+release of the levo-enantiomers ropivacaine and l-bupivacaine,
+plus emerging laboratory observations on the effectiveness of
+lipid emulsion as an antidote for LAST. In 2008, a second advi-
+sory panel met to develop a rational approach for treatment2 and
+to assimilate information on the history, mechanisms, prevention,
+and detection of LAST.1,3–7 Consistent with ASRA's commitment
+to update its practice advisories as new knowledge emerges, in
+2015, the board of directors commissioned a small group of cur-
+rent researchers to develop this third advisory. In compliance with
+calls from medical journal editors to focus practice advisory
+updates on new information,8 we herein present developing
+knowledge on the mechanisms of lipid resuscitation, new insights
+into incidence and epidemiology, evolving patterns of case pre-
+sentation, and revised treatment protocols.
+
+This executive summary condenses information and recom-
+mendations from supporting articles that have been published
+recently9 or concurrently as part of this practice advisory.10–13
+Practitioners are encouraged to read these articles to understand
+the basis underlying our recommendations.
+
+METHODS
+
+Individual supporting articles provide details relevant to the
+sources accessed to derive their analysis and recommendations.
+In general, standard medical literature search engines and article
+cross-referencing were used to identify animal and human studies,
+case reports and series, and epidemiologic information. The focus
+was on new publications and developments since our 2010 advisory.
+The panel consisted of recognized experts in LAST and/or
+guideline development and includes the authors of this article.
+The ASRA provided standard travel reimbursement for members
+of the advisory group who met in Chicago on March 26, 2016. No
+panelist was paid for their participation, nor did ASRA receive
+external funds to support the advisory process.
+
+The second ASRA practice advisory sought input from ex-
+ternal sources including other anesthesiologists with expertise in
+LAST, professional organizations representing physicians and
+dentists who commonly use local anesthetics, and open forum
+
+Regional Anesthesia and Pain Medicine (cid:129) Volume 43, Number 2, February 2018
+
+discussion of our recommendations.1 Because the current practice
+advisory represents an interim update and does not recommend
+major changes to treatment, external input was solicited only at
+open forum presentations coinciding with the ASRA 2015 and
+2016 spring meetings.
+
+Strength of Recommendations
+
+As stated in our 2010 advisory: “There are no randomized
+clinical trials (RCTs) evaluating serious human LAST; future RCTs
+are unlikely because of the rarity of these complications and the
+associated difficulty of obtaining informed consent for medical
+interventions in critical illness. Common strength-of-evidence
+schemas that are based on RCT-level evidence are therefore inap-
+propriate for the topic of human LAST, but may be appropriate for
+animal studies. Hence, the panel's recommendations are based on
+a modified Classification of Recommendations and Levels of
+Evidence schema that was developed by the American College
+of Cardiology/American Heart Association14 (Table 1). The panel
+wishes to emphasize that assigning a level of evidence B or C
+should not be construed as implying that
+the associated
+recommendation is supported by conflicting data or is limited
+by conflicting interpretations of the available data. Rather, such
+recommendations reflect our recognition of the importance of
+the particular question as it relates to LAST and to the reality
+that the specific question is either yet to be addressed by an
+RCT or does not lend itself to experimental inquiry in humans.”1
+
+Limitations
+
+As with previous ASRA advisories, “readers of this manu-
+script are reminded that practice advisories are created when data
+on a subject are limited or non-existent. Advisories rely on limited
+clinical and animal data and, as such, the synthesis and interpreta-
+tion of data by one group of experts may differ from conclusions by
+
+TABLE 1. Classification of Recommendations and Levels of
+Evidence
+
+Classification of Recommendations
+
+Class I
+
+Conditions for which there is evidence and/or general
+agreement that a given procedure or treatment is
+useful and effective
+
+Class II
+
+Conditions for which there is conflicting evidence
+
+and/or a divergence of opinion about the
+usefulness/efficacy of a procedure or treatment
+IIa. Weight of evidence/opinion is in favor of
+
+usefulness/efficacy
+
+IIb. Usefulness/efficacy is less well established by
+
+evidence/opinion
+
+Class III
+
+Conditions for which there is evidence and/or general
+
+agreement that the procedure/treatment is not
+useful/effective, and in some cases may be harmful
+
+Level of Evidence
+
+Level A
+Level B
+
+Data derived from RCTs
+Data derived from nonrandomized or laboratory, eg,
+animal, studies; supported by multiple case reports
+or case series
+
+Level C
+
+Consensus opinion of experts
+
+Table 1 is presented unchanged from the Second ASRA Practice
+Advisory on LAST1 and is modified from an American College of
+Cardiology/American Heart Association schema for developing and
+grading guidelines.14
+
+another set of equally qualified experts. Thus, practice advisories
+represent a level of recommendation less than that offered by stan-
+dards or clinical practice guidelines. The recommendations
+contained herein do not define standard of care. They are not
+intended to replace clinical judgment as applied to a specific pa-
+tient scenario. These recommendations are intended to encourage
+optimal patient care, but cannot ensure the avoidance of adverse out-
+comes. As with any practice advisory recommendation, these are sub-
+ject to revision as knowledge of specific complications advances.”15,16
+
+DISCUSSION
+
+Mechanisms Underlying Lipid Resuscitation
+
+The most important recent advances in our knowledge of
+LAST relate to the basic science of lipid emulsion resuscitation,
+within both anesthesiology and other disciplines that involve
+medical toxicology. New to this practice advisory, Fettiplace
+and Weinberg10 provide an in depth discussion of the mechanisms
+that underlie the therapeutic reversal of LAST by lipid emulsion.
+Henceforth, we summarize the most salient points of this topic,
+the complexity of which necessitates reading the accompany-
+ing supporting article to move beyond basic understanding.
+
+Lipid emulsion reversal of LAST is ultimately linked to
+cellular mechanisms that are affected by local anesthetics. Under
+normal circumstances, local anesthetics block nerve conduction
+by inhibiting transduction of sodium, calcium, and potassium
+through voltage-gated ionotropic channels located in the cell
+membrane. Acute local anesthetic cardiotoxicity negatively im-
+pacts myocardial contractility, cardiac conduction, and systemic
+vascular resistance through a complex and widespread set of
+events that involve channel blockade, metabolic signaling, and in-
+tracellular energy production, that is, inhibition of oxidative phos-
+phorylation. The clinical effects of these cellular events manifest
+initially as hypertension and tachydysrhythmias that progress to
+depressed cardiac conduction and performance (reduced cardiac
+output), bradycardia, and hypotension. Similarly, local anesthetic
+toxic effects on central nervous system (CNS) ionic channels
+manifest initially as altered mental status and/or mild prodromal
+symptoms such as paresthesias, tinnitus, and agitation and prog-
+ress to seizure and possible coma.
+
+Lipid emulsion resuscitation was first proposed as a treat-
+ment for LAST in 1998 and translated into clinical practice 8 years
+later.10 Over this timeframe, a number of potential mechanisms of
+action were proposed, the most prominent of which involved the
+hypothesis that lipid emulsion infusion effectively created an
+intravascular lipophilic “sink” into which lipid soluble local an-
+esthetics such as bupivacaine partitioned and were ultimately
+removed from the body.17 Twenty years later, lipid emulsion
+therapy is believed to involve multiple mechanisms that involve
+active shuttling of local anesthetic away from the heart and brain,
+cardiotonic effects that involve the heart and/or vasculature, and
+postconditioning cardioprotective effects.10
+
+Shuttling Effects
+
+Rather than acting as a static lipid sink, current research sup-
+ports the concept that lipid emulsion works as a dynamic carrier to
+scavenge local anesthetic away from high blood flow organs that
+are most sensitive to LAST (ie, the heart and brain) and redistrib-
+ute it to organs that store and detoxify the drug (ie, muscle and
+liver, respectively)18 (Fig. 1). The precise mechanisms of local
+anesthetic binding to lipid droplets are not understood fully but
+are believed to combine thermodynamic effects, for example,
+electrostatic attraction and physicochemical characteristics such
+as lipophilicity and acid-base ionization, as positively charged,
+
+FIGURE 1. Schematic representation of mechanisms associated with lipid emulsion reversal of LAST, including shuttling of lipophilic local
+anesthetic from the heart and brain to muscle and liver. Adapted from Fettiplace et al18 with permission.
+
+fat-soluble local anesthetic molecules bind to negatively charged
+lipid particles. These observations appear to support lipid emul-
+sion having greater efficacy in shuttling the more lipophilic local
+anesthetics such as bupivacaine. Nevertheless, even the less
+lipophilic local anesthetics such as lidocaine or mepivacaine are
+highly lipid soluble and carry a positive charge at physiologic
+pH. Therefore, lipid emulsion should be effective at reversing
+toxicity after overdose with lidocaine19 or mepivacaine. Further
+evidence suggests that together these pharmacokinetic attributes
+work to accelerate redistribution of local anesthetics by increasing
+the α half-life in whole blood, while decreasing the concentra-
+tion of local anesthetic in the nonlipid fraction. The net effect
+shortens local anesthetic elimination half-life.20–22 Lipid emul-
+sion also has nonscavenging effects that manifest as cardio-
+tonic and postconditioning effects.
+
+Cardiotonic Effects
+
+Several lines of evidence support the concept that lipid in-
+creases cardiac performance, which enhances the shuttling effect.
+The direct cardiotonic effects of lipid emulsion increase cardiac
+contractility, which increases cardiac output and blood flow through
+affected organs. Volume loads associated with lipid resuscitation
+improve cardiac function by a simple preload effect, although this
+effect is significantly less than the positive inotropy seen in both
+intact rat and isolated heart models during infusion of lipid. Lipid
+infusion also increases blood pressure via poorly understood ef-
+fects on the peripheral vasculature. Together, these mechanisms
+serve to improve both cardiac output and blood pressure.23,24
+
+Postconditioning Effects
+
+Recent laboratory experiments support the concept that
+adverse cellular effects of LAST overlap with mechanisms of
+cardiac ischemia-reperfusion injury.25 Coupled with the observa-
+tion that infused lipid emulsion activates cardioprotective path-
+ways, this provides an additional mechanism of postconditioning
+
+benefit to the local anesthetic-toxic heart.26,27 The explanations
+behind these purported benefits are discussed in detail in the
+supporting article.10
+
+Incidence and Epidemiology
+
+Since publication of our 2010 practice advisory, new evi-
+dence has furthered our understanding of LAST epidemiology.
+This information is derived from analysis of administrative data-
+bases, registries, and case reports/case series. Of particular impor-
+tance is publication of several studies that suggest the incidence of
+LAST associated with epidural28 and peripheral nerve blocks
+(PNBs) is decreasing,29 which has led some experts29,30 to debate
+whether or not LAST remains a clinically relevant complication.
+
+Administrative Databases
+
+One avenue to assess the frequency of LAST in the general
+community population is to query large administrative databases
+such as the Premier Perspective Database (PPD).31 As part of
+the current advisory series, Mörwald et al9 recently presented data
+from over 400 hospitals on nearly 238,500 patients who received a
+PNB for total joint arthroplasty between 2006 and 2014. This
+methodology's weakness is that it lacks clinical details beyond
+those revealed by diagnostic or billing codes, and because no
+specific coding for LAST could be identified in the hospital
+reports, the methodology relies on surrogate markers such
+as seizure, cardiac arrest, or administration of lipid emulsion.
+Although the occurrence of seizure or cardiac arrest may
+overestimate the frequency of LAST, the increased use of
+lipid emulsion on the day of surgery is likely specific to the
+true diagnosis. In Mörwald et al's9 study, the cumulative rate
+of LAST was 0.18%, that is, the rate of patients receiving a
+PNB and experiencing at least one LAST-associated outcome
+was 1.8/1000. During the 9-year study period, the overall adverse
+outcome rate trended downward without the trend reaching
+statistical significance, whereas the use of lipid emulsion increased
+
+significantly. The investigators concluded that, although this
+population-based frequency of LAST is low, it should be consid-
+ered clinically meaningful.
+
+The National Inpatient Sample (NIS) contains a diagnostic
+code specific to LAST, although it remains uncertain how specific
+the coding is for LAST events, because errors in coding can occur
+as a result of physician documentation or data abstraction. In the
+current practice advisory series, Rubin et al12 report an incidence
+of LAST intermediate between that of the PPD and those of single
+institutions and specialized registries. Their database query of over
+710,000 PNBs placed for total joint arthroplasties revealed an
+average adjusted incidence of 1.04 (confidence interval [CI],
+0.49–1.80) LAST events per 1000 PNBs over the 15-year period
+1998 to 2013. Of these events, 1 in 5 was considered major, that
+is, involved a seizure (8.1%) or a major cardiac complication
+(6.8%). Contrary to observations from case reports,4 there were
+no deaths and multivariable analysis found no correlation between
+LAST and age or comorbidity. Total shoulder arthroplasty was as-
+sociated with LAST more often than knee or hip operations (odds
+ratio [OR], 4.35; CI, 1.96–9.65), as was being cared for in a large
+to medium-sized hospital. Over the 15-year study period, and
+similar to Mörwald et al's9 findings, the odds of a LAST event
+trended downward by 10% per year (OR, 0.90; CI, 0.84–0.96)
+despite increased PNB use.
+
+The PPD's 1.8/1000 cumulative rate and the NIS 1.04/1000
+incidence, while similar, are considerably higher than the 0.04/
+1000 to 0.8/1000 LAST incidences reported contemporaneously
+from various registries,32 national surveys,33 and single institu-
+tions.29,34 Variations in the incidence may reflect differing defi-
+nitions of LAST. For example, studies that include generalized
+CNS excitation35 or minor cardiac complications12 in addition
+to seizure and cardiac arrest report a higher incidence of LAST
+(0.87/1000 to 1.04/1000) than studies29 that only include seizure
+or cardiac arrest (0.04/1000). With regard to expertise and case-
+load, PPD data suggest that LAST events within the community,
+where case volumes may be low and ultrasound use not universal,
+may be more common than those reported from registry instru-
+ments or single institutions that manifest expertise in regional an-
+esthesia. Conversely, the NIS study found no difference between
+teaching and nonteaching hospitals. In summary, although admin-
+istrative databases have specific weaknesses related to the lack of
+relevant clinical information on individual LAST events, they do
+demonstrate that LAST remains a rare yet relevant issue in the
+community at large.
+
+Registries
+
+A wealth of registry and observational study data have been
+published since 2010. These works range from extensions of pre-
+viously published quality assurance data sets,36,37 national data-
+bases33,38 and international registries,35,39 to specific registries
+that focus on pediatric practice,40–42 single-center data,29,32 and
+data specific to interscalene brachial plexus block.34
+
+The most important new finding from the Australian and
+New Zealand Registry of Regional Anaesthesia (now the Interna-
+tional Registry of Regional Anaesthesia) is that ultrasound guidance
+reduces the risk of LAST throughout its continuum by 60% to 65%
+(propensity analysis OR, 0.35–0.36) as compared with peripheral
+nerve stimulation alone.35 This observation is supported by the
+Dartmouth registry, which reported only 1 seizure in 12,668
+ultrasound-guided blocks.32 The International Registry of Regional
+Anaesthesia registry also reported a surprisingly higher risk of LAST
+with lidocaine than with ropivacaine, which the authors speculated
+may reflect a practitioner's false sense of security when using
+relatively less toxic lidocaine.35
+
+National survey data from Italy38 reveal an incidence of
+LAST during PNB of 0.34/1000 blocks, and Finnish data33 docu-
+ment a similar 0.37 per 1000 PNBs. Of note, the Finnish incidence
+is lower if all LAST events (including epidural, but not spinal,
+anesthetics) are included (0.07 per 1000). This observation is
+consistent with previous knowledge that LAST is 4 to 5 times
+more common with PNBs than with epidurals.1 If one were to
+combine LAST events reported since 2010 from 11 registries
+and observational studies, the population frequency is 0.27/1000
+(95% CI, 0.21–0.35) (69 events per 251,325 PNBs).11
+
+Data from observational studies offer some insights into
+whether or not experience and expertise affect the rate of LAST.
+The Finnish study33 noted a 3.3 relative risk of having a LAST
+event in a nonuniversity hospital as compared with a university
+hospital. Similarly, the Hospital for Special Surgery in New
+York, which represents a specialized high-volume regional an-
+esthesia practice, reported 0.04 seizures per 1000 blocks,
+which is lower than other reports and may not apply to the com-
+munity at large.29
+
+Pediatric anesthetics captured in registries40,42 and single-
+center41 observational studies confirm a very low overall rate of
+LAST in children. Data from the 2012 Pediatric Regional Anes-
+thesia Network documented no LAST episodes in 14,917 proce-
+dures,42 although its most recent analysis of over 100,000 regional
+anesthetics will report 7 severe LAST episodes (cardiac arrest or
+seizure)—0.076/1000, 95% CI, 0.029 to 0.14/1000 (J.M. Neal,
+MD, and D.M. Polaner, MD, personal written communication
+September 19, 2017). The French-Language Society of Pediatric
+Anaesthesiologists' registry40 reported rates of 0.16/1000 for
+PNBs and 1.3/1000 neuraxial blocks (excluding spinal anesthe-
+sia). The frequency of LAST associated with pediatric continuous
+catheter techniques is higher, 1.53 per 1000.41 When compared
+with the overall population frequency of 0.27/1000 (95% CI,
+0.21–0.35),11 it can be argued that the rate of LAST in pediatric
+populations is less than that in adults. This in part may be be-
+cause most regional anesthesia in children is performed under
+general anesthesia (which raises seizure threshold) using
+smaller local anesthetic volumes, and children likely have a
+lower comorbidity burden.
+
+In summary, clinical registries have the capability of identify-
+ing infrequent events that occur in large populations, but often at
+the expense of detailed analysis. Of recent events that were reported
+in sufficient detail, 72% were considered major: 42 seizures and
+8 cardiovascular (CV) presentations.11 Expectedly, minor events
+are less likely to be reported at all. These data support the asser-
+tion that LAST, while rare, remains a serious complication of local
+anesthetic use. Ultrasound guidance reduces the likelihood of any
+LAST event, yet seizure and/or cardiac arrest still occur at an
+estimated rate of 0.26/1000 ultrasound-guided blocks.43
+
+Case Reports and Series
+
+Voluminous case reports published over the past decade
+emphasize the need to educate anesthesiologists and especially
+nonanesthesiologists in the prevention, recognition, and treatment
+of LAST. Case reports and case series allow in-depth analysis of
+individual incidents of LAST, but without the ability to gain insight
+into population-based frequency. The power of case report analysis
+is the ability to discern patient comorbidities, technique details,
+and treatment effectiveness, together with the ability to appreciate
+evolving trends in LAST presentation. The latter is important in
+assessing the impact of newer local anesthetic agents, nerve lo-
+calization techniques (ultrasound guidance), and/or treatment
+modalities such as lipid emulsion therapy. Insights from case re-
+port analysis will be presented in Recognition section.
+
+In summarizing knowledge related to the incidence or fre-
+quency of LAST, we wish to emphasize that regardless of reporting
+mechanism, administrative data, registries, or case reports, the true
+frequency of LAST in the anesthesiology community is very
+likely underreported. This stems from a number of factors in-
+cluding misdiagnosis, publication bias, and individual practitioner
+underreporting, especially because it relates to nonanesthesiologists.
+The panel opines that, even if the rates of LAST are decreasing, the
+complication should not be trivialized. When placed into the perspec-
+tive of other rare anesthetic complications, serious LASToccurs more
+frequently than epidural hematoma and at least as often as peripheral
+nerve injury, and is unique to both in its potential for mortality.
+
+Prevention
+
+Prevention is the primary and preferred mechanism for re-
+ducing the frequency and severity of LAST; meticulous attention
+to detail is the most important aspect of prevention. Optimal pre-
+vention is a multifactorial process, because no single intervention
+eliminates risk. Prevention involves 3 facets: avoidance and/or
+recognition of direct intravascular injection of local anesthetic,
+mitigating systemic uptake of local anesthetic from soft tissues,
+and awareness of patients at increased risk for LAST. The latter
+topic will be discussed in Recognition section.
+
+Limiting Local Anesthetic Uptake
+
+Table 2 reviews key prevention strategies. Avoidance of in-
+travascular injection is best accomplished by ultrasound guidance,
+judicious use of an intravascular marker, and incremental injection
+of local anesthetic through needles and catheters based on an ap-
+propriate circulation time between injections (longer for lower
+
+TABLE 2. Recommendations for Preventing LAST
+
+extremity blocks and at-risk patients, such as those with slower
+circulation). Systemic uptake of local anesthetic is best mitigated
+by awareness of those regional techniques most associated with
+delayed systemic uptake, by prolonging drug clearance through
+the use of epinephrine,44 and by using the lowest effective local
+anesthetic dose, which can be facilitated by low volume ultrasound-
+guided techniques.43 The panel wishes to emphasize awareness
+that local anesthetic toxicity is additive—whether by subsequent
+redosing of the same or a different local anesthetic and whether
+administration of the drug is by the same or a different member
+of the perioperative team. The latter scenario may occur when
+anesthesiologist and surgeon both administer local anesthetic
+during the care of a patient.
+
+LAST and the Newer Regional Anesthetic Techniques
+New regional anesthetic techniques have expanded into anes-
+thesiologists' practice. These include a variety of fascial plane-based
+truncal blocks, local infiltration anesthesia (LIA), and extended
+release liposomal bupivacaine (LB). Published information on
+these topics is limited, which impacts the panel's ability to offer
+definitive recommendations.
+
+Within the anesthesiology community, the largest growth in
+new techniques involves truncal blocks that target fascial planes
+(eg, transversus abdominis plane, rectus sheath, quadratus lumborum,
+pectoral blocks).45 Within the surgical community, LIA has ex-
+panded, particularly in total joint arthroplasty practice. Case re-
+ports document LAST occurrences in both truncal block46 and
+LIA47 patients. The former may be at particularly high risk for
+LAST because targeted tissue planes are very vascular, local anes-
+thetic volumes are high, and the blocks are often used in at-risk
+
+• There is no single measure that can prevent LAST in clinical practice.
+• Ultrasound guidance significantly reduces the risk of LAST in humans undergoing peripheral nerve block. Nevertheless, individual reports
+describe LAST despite the use of ultrasound. (I, B)
+• Use the lowest effective dose of local anesthetic (dose = product of volume × concentration). (I, C)
+• Use incremental injection of local anesthetics—administer 3 to 5 mL aliquots, pausing 15–30 seconds between each injection. When using a
+fixed needle approach, eg, landmark, paresthesia-seeking, or electrical stimulation, time between injections should encompass 1 circulation time
+(~30–45 s); however, this ideal may be balanced against the risk of needle movement between injections. Circulation time may be increased with
+lower extremity blocks or in those patients with diminished cardiac output. Use of larger dosing increments suggests the need for longer
+intervals to reduce the cumulative dose from stacked injections. (I, C)
+• Aspirate the needle or catheter before each injection, recognizing that there is an ~2% false negative rate for this diagnostic intervention. (I, B)
+• When injecting potentially toxic doses of local anesthetic, use of an intravascular marker is recommended. Although epinephrine is an imperfect
+maker and its use is open to physician judgment, its benefits likely outweigh its risks in most patients (IIa, B):
+○ Intravascular injection of epinephrine 10–15 μg/mL in adults produces a ≥10 beat heart rate increase or a ≥15 mm Hg systolic blood pressure
+
+increase in the absence of β-blockade, active labor, advanced age, or general/neuraxial anesthesia.
+
+○ Intravascular injection of epinephrine 0.5 μg/kg in children produces a ≥15 mm Hg increase in systolic blood pressure.
+○ Appropriate subtoxic doses of local anesthetic can produce subjective symptoms of mild systemic toxicity (auditory changes, excitation,
+
+metallic taste, etc) in unpremedicated patients.
+
+○ Fentanyl 100 μg produces sedation if injected intravascularly in laboring patients.
+• Caregivers should be aware of the additive nature of local anesthetic toxicity and adjust accordingly local anesthetic redosing and/or
+administration by different perioperative providers. (II, B)
+• The risk of LAST associated with truncal blocks may be reduced by using lower concentrations of local anesthetics, dosing on lean body weight,
+adjunctive epinephrine, and observation for at least 30 to 45 minutes after the block. (I, C)
+• Patients receiving LB should receive the same level of vigilance afforded to any patient receiving a local anesthetic. (I, C)
+• Include local anesthetic dosing parameters and at-risk patient concerns as part of the preincisional surgical pause. (I, C)
+
+patient populations, that is, children and parturients. The advisory
+panel agrees with the recommendations put forth by Chin et al48
+in their recent review of abdominal wall blocks. Their recom-
+mended strategies to reduce the likelihood of LAST include using
+epinephrine to reduce local anesthetic bioavailability,49 using di-
+lute concentrations of less cardiotoxic local anesthetics, basing
+dose calculations on lean body weight, and 30- to 45-minute
+monitoring periods to account for the prolonged time to local
+anesthetic peak plasma concentration that is inherent to truncal
+blocks.48 (IIa; B)
+
+Data pertinent to LB and LAST are limited, which is both
+reassuring and worthy of conservative interpretation. Ilfeld et al's50
+retrospective review of 6 published RCTs of LB use for 335 PNBs
+reported no incident of identifiable LAST. Incidents of dose-related
+bradycardia (2%–14%) were conceivably consistent with limited
+LAST, but by no means diagnostic. To our knowledge, there are
+no published case reports of LAST associated with LB (possibly
+indicating negative reporting bias for adverse events); however,
+130 cases (January 2012 to June 2016) are present in the US Food
+and Drug Administration's (FDA's) Adverse Event Reporting Sys-
+tem. This voluntary self-reporting system, which does not have a
+code specific to LAST, is non–peer reviewed and is open to reports
+from medical professionals, industry, and private individuals. Using
+the statistical technique of disproportionality analysis, Aggarwal51
+reports an association between LB and LAST based on the FDA's
+Adverse Event Reporting System data.
+
+The corpus of published human studies on LB totals only a
+few thousand patients, the drug has been clinically available
+in the United States for only 5 years, and the pharmacologic and
+chemical dynamics of liposomal formulations are dramatically
+different from standard local anesthetics. Based on such limited
+information, our recommendation is that patients receiving LB
+be afforded the same level of vigilance as would be given to any
+patient receiving a local anesthetic (IIb; C).
+
+Prevention Strategies
+
+In the interval since our second practice advisory, 2 new find-
+ings related to prevention deserve emphasis. First is the evolving
+role of ultrasound guidance. Meta-analysis had shown that ultra-
+sound reduced the incidence of vascular puncture associated with
+PNB compared with peripheral nerve stimulation,52 yet previous
+institutional32,36 and registry39 data did not link this surrogate
+outcome to a definitive reduction in seizure or cardiac arrest.
+In the intervening years, Barrington and Kluger35 have confirmed
+that ultrasound guidance reduces the incidence of LAST episodes
+spanning the continuum from mild subjective symptoms of tox-
+icity to seizure and cardiac arrest. As compared with landmark
+techniques, ultrasound reduced the risk of LAST by 65% in their
+study of over 25,000 PNBs. These findings are consistent with
+those reported by Orebaugh et al.37 The second new finding
+related to prevention involves the changing patterns of LAST
+presentation, as discussed below.
+
+Recognition: The Changing Patterns of
+LAST Presentation
+
+Our 2010 advisory was accompanied by DiGregorio et al's4
+analysis of 93 LAST cases reported over the 30-year period,
+1979 to 2009.4 In the interim, Vasques et al53 presented 67 addi-
+tional cases from 2010 to March 2014. Accompanying the current
+advisory, Gitman and Barrington11 present 47 more cases reported
+between April 2014 and November 2016. These case series span
+nearly 4 decades and serve to confirm some expected patterns of
+LAST clinical presentation while revealing changing patterns in
+others. First, all 3 case series reinforce the concept that LAST
+
+events are skewed toward the extremes of age. The recent finding
+that large amounts of absorbed local anesthetic are stored in skel-
+etal muscle suggests that patients with low muscle mass are at
+higher risk for LAST. The most recent Pediatric Regional Anes-
+thesia Network data confirm similar observations in infants under
+6 months old, whose rate of serious LAST is 6-fold higher than
+that for other children (J.M. Neal, MD, and D.M. Polaner, MD,
+personal written communication on September 19, 2017). In addi-
+tion to lower muscle mass, infants and neonates manifest a higher
+unbound fraction of local anesthetic. Second, although bupivacaine
+is the most toxic local anesthetic and the most difficult overdose to
+resuscitate when LAST occurs, all local anesthetics are capable of
+causing toxicity, including “safer” agents such as lidocaine and
+ropivacaine (26% and 21%, respectively, of total events in the latest
+case series).11 The advisory panel and others35,54 speculate that
+practitioners may be less vigilant with regard to dosing and safety
+steps when administering these purportedly less toxic local anes-
+thetics. Furthermore, the panel opines that, when viewed on an
+equipotent basis, ropivacaine as administered in most clinical set-
+tings is likely similar in toxicity to bupivacaine. Third, about 15%
+of LAST events involve continuous local anesthetic infusions
+and most episodes present 1 to 4 days after initiation of the in-
+fusion, often with subtle prodromes or hemodynamic changes.
+The combined case series4,11,53 also reveal shifting patterns
+in LAST's clinical presentation. First, an increasing number of
+events (about 20%) occur outside of the traditional hospital envi-
+ronment and half involve a nonanesthesiologist. The occurrence
+of LAST after simple tissue infiltration of local anesthetic in 20%
+of events is consistent with nonanesthesia-trained practitioners ad-
+ministering the drug and/or an increase in LIA techniques. Similar
+events involve topical anesthesia of the airway or transcutaneous
+absorption of local anesthetics. Second, a new signal from the
+current case series11 involves a preponderance of pediatric LAST
+events associated with penile block, which accounted for a quarter
+of case reports during that series' 2.5-year period. Some of these
+cases required chest compression.55 Encouragingly, after imple-
+menting policy, dosing, and technique changes, the involved insti-
+tution reports no further LASTevents associated with penile block
+(G. Weinberg, MD and R. Yu, MD, personal verbal communica-
+tion May 2017).
+
+The 2010 practice advisory noted that 40% of reported cases
+did not present in a manner consistent with the classic textbook
+description of LAST. Rather than an initial complex of CNS
+excitement, for example, metallic taste or auditory changes,
+followed by seizure and then CV collapse, nearly half of the
+presentations were considered “atypical,” presenting with CV
+signs alone (no evidence of CNS toxicity) and/or having a delayed
+presentation (more than 5 minutes after injection of local anes-
+thetic). Although the occurrence rates vary slightly, the interim
+analyses from 2010 to 201611,53 conform to previous observations
+that about one third of patients present with combined CNS/CV
+signs and symptoms (mostly seizures, hypertension or hypoten-
+sion, and electrocardiographic changes). Fewer patients exhibit
+isolated CV symptoms as compared with isolated CNS symptoms
+(Figs. 2, 3). Another change to clinical presentation is a shift in
+timing from signs and symptoms appearing coincident with or
+within a minute of local anesthetic administration (intravascular
+injection) to presentations that are delayed from several minutes
+to 30 or even 60 minutes after injection11,53 (Fig. 4). We speculate
+that this shift toward delayed presentation involves fewer intra-
+vascular injections as a consequence of ultrasound guidance,
+the increasing use of local tissue infiltration techniques, and/or
+increasing use of continuous local anesthetic infusion. This shift
+strengthens our previous advice to observe patients for at least
+30 minutes after injecting potentially toxic doses of local anesthetic.
+
+P
+r
+o
+t
+e
+c
+t
+e
+d
+b
+y
+
+c
+o
+p
+y
+r
+i
+g
+h
+t
+,
+
+FIGURE 2. Local anesthetic systemic toxicity presentation by
+organ system, as described in case reports from 2014 to 2016.11
+
+Despite changing patterns in LAST presentation, our recom-
+mendations remain consistent. Local anesthetic systemic toxicity
+is a masquerader, and its detection requires persistent open-minded
+vigilance. To emphasize reasonable local anesthetic dosing and to
+highlight those patients most at risk for LAST, we recommend in-
+cluding a discussion of local anesthetic use during the preincisional
+surgical pause. Doing so facilitates awareness among all perioperative
+
+FIGURE 3. Spectrum of LAST clinical presentations, as described
+in case reports from 2014 to 2016.11
+
+FIGURE 4. The changing time intervals between injection of local
+anesthetic and initial presentation of LAST over 3 time periods:
+1979 to 2009,4 2010 to 2014,53 and 2014 to 2016.11 The
+changing slopes of trend lines suggest that contemporary LAST
+presentations are becoming more delayed as compared with
+previous years.
+
+team members,
+
+team members of maximal local anesthetic dosing and the issue
+of additive toxicity, particularly because it pertains to local an-
+esthetic administration by different
+including
+nonanesthesiologists. The surgical pause is also an opportunity to
+highlight at-risk patients and how they might present with LAST.
+Classic presentation patterns that involve subjective signs, seizure,
+or cardiac arrest in close proximity to local anesthetic dosing do
+not always occur. When patients receive a local anesthetic and
+manifest a delayed presentation of agitation or CNS depres-
+sion, or unexplained signs of cardiac compromise such as
+progressive hypotension or bradycardia, LAST should be
+considered in the differential diagnosis. Table 3 outlines factors be-
+lieved to heighten the risk of LAST. Table 4 reviews recommenda-
+tions for diagnosing LAST.
+
+Treatment: Evolving Paradigms
+
+The treatment of severe LAST is fundamentally different
+from conventional cardiopulmonary resuscitation (CPR) insofar
+as toxic cardiomyopathy differs pathophysiologically from other
+causes of CV collapse. First, unlike contemporary CPR paradigms
+that eschew early respiratory interventions in favor of cardiac
+support, successful treatment of LAST hinges on the primacy
+of airway management to prevent the hypoxia, hypercapnia,
+and acidosis that potentiate LAST and negatively impact resusci-
+tative efforts. The mechanism of potentiation may be related to
+increased free fraction of local anesthetic and/or worsening of
+cardiac function. Second, while CPR and Advanced Cardiac Life
+Support (ACLS) symptomatically treat hemodynamic perturba-
+tions consequent to ischemic cardiac injury, usually with the goal
+of improving coronary perfusion, successful treatment of LAST
+seeks to effectively moderate or reverse the mechanisms underly-
+ing the local anesthetic toxicity. Recent evidence indicates that the
+inotropic benefit of lipid only occurs when myocardial local anes-
+thetic content is reduced below a threshold that corresponds to ion
+channel blocking concentrations. This underlines the importance
+of effective CPR to ensure that coronary perfusion is sufficient
+to reduce local anesthetic tissue levels to attain the maximum ben-
+efit of lipid infusion. Third, recent data from rat models reinforce
+the admonition that epinephrine, when necessary, be administered
+initially in small doses (1 μg/kg or less) to avoid impaired
+
+A
+n
+e
+s
+t
+h
+e
+s
+a
+&
+P
+a
+n
+M
+e
+d
+c
+n
+e
+:
+
+TABLE 3. Risk Factors for LAST
+
+• Patient characteristics
+○ Extremes of age—less than 16 or more than 60 years
+○ Low muscle mass—particularly with neonates, infants, and the debilitated elderly
+○ Female > male
+○ Comorbidities
+
+▪ Cardiac disease, especially arrhythmias, conduction abnormalities, ischemia, and congestive heart failure
+▪ Liver disease
+▪ Metabolic disease, especially diabetes mellitus, isovaleric acidemia, mitochondrial disease, and carnitine deficiency
+▪ CNS diseases
+▪ Low plasma protein binding—liver disease, malnourishment, infants, pregnancy
+
+• Local anesthetic characteristics
+○ Bupivacaine has a lower safety margin and resuscitation is more difficult in the event of LAST, but local anesthetics such as ropivacaine and
+
+lidocaine still account for a significant proportion of LAST events.
+
+○ Block site, total local anesthetic dose, test dosing, and patient comorbidities are more predictive of high plasma levels of local anesthetic than
+
+are body weight or body mass index.
+
+○ Local anesthetic infusions are particularly problematic after 1 to 4 days and in patients of small body mass.
+○ Seizure is up to 5 times more likely after PNB than epidural block.
+• Practice setting
+○ Up to 20% of LAST cases occur outside of the hospital setting.
+○ Nonanesthesiologists are involved in up to 50% of LAST cases.
+
+Risk factors are extrapolated primarily from case reports and series. This table is derived from mostly IIa; B evidence.
+
+pulmonary gas exchange56 and increased afterload. Fourth, simu-
+lated LAST scenarios have demonstrated the usefulness of the ASRA
+Checklist57 as a cognitive aid during LAST treatment58 and the value
+of a reader to prompt adherence to recommendations.59 An updated
+version of the ASRA Checklist is part of this practice advisory
+series.13 The ASRA LAST smart phone app (iOS and Android)
+has been updated coincident with this practice advisory.
+
+Insights Regarding Contemporary LAST Treatment
+
+The case report analysis presented with this practice advi-
+sory11 allows insights into the contemporary treatment of LAST.
+
+Treatment protocols developed by national organizations such as
+ASRA57 and the Association of Anaesthetists of Great Britain
+and Ireland60 are followed inconsistently. Less than half (47%)
+of patients with LASTwere treated with lipid emulsion, and nearly
+40% of those patients received the antidote 10 minutes or longer
+after symptom onset, occasionally at an incorrect dose. Neverthe-
+less, and within the limits of case series comparison, the overall
+use of lipid emulsion has apparently increased from 34% to
+47% as compared with our 2010 report.4 An ACLS was necessary
+in 21% of patients; duration ranged from 2 to 60 minutes. Two of
+the reported 47 patients died; one from a combination of delayed
+diagnosis and treatment, and the other self-administered over 4 g
+
+TABLE 4. Recommendations for Diagnosing LAST
+
+• Classic descriptions of LAST depict a progression of subjective symptoms of CNS excitement (agitation, auditory changes, metallic taste or
+abrupt onset of psychiatric symptoms), followed by seizures then CNS depression (drowsiness, coma, or respiratory arrest). Near the end of this
+continuum, initial signs of cardiac toxicity (hypertension, tachycardia, or ventricular arrhythmias) are supplanted by cardiac depression
+(bradycardia, conduction block, asystole, decreased contractility, and hypotension). However, there is substantial variation in this classic
+description, including:
+○ Simultaneous presentation of CNS and cardiac toxicity
+○ Cardiac toxicity without prodromal signs and symptoms of CNS toxicity
+○ Thus, the practitioner must be vigilant for atypical or unexpected presentation of LAST. (I; B)
+• The timing of LAST presentation is variable. Immediate (<60 s) presentation suggests intravascular injection of local anesthetic with direct access
+to the brain, whereas presentation that is delayed 1 to 5 min suggests intermittent intravascular injection, lower extremity injection, or delayed
+tissue absorption. Recent case reports suggest a shift toward delayed presentations of LAST. Because LAST can present more than 15 min and
+occasionally over an hour after injection, patients who receive potentially toxic doses of local anesthetic should be closely monitored for at least
+30 min after injection. (I; B)
+• The overall variability of LAST signs and symptoms, timing of onset, and association with various disease states suggests that practitioners
+should maintain a low threshold for considering the diagnosis of LAST in patients with atypical or unexpected presentation of CNS or cardiac
+signs and symptoms after receiving more than a minimal dose of local anesthetic. (IIa; B)
+
+of topical lidocaine at home. As expected, all 11 unpublished cases
+submitted to lipidrescue.org from April 2014 to November 2016 re-
+ceived lipid emulsion immediately or within 5 minutes of symptom
+onset. Three of these patients required ACLS, but none died.
+
+been increased to ~12 mL/kg based on FDA recommendations.61
+Nevertheless, total lipid doses used in resuscitation of LAST are
+usually much less (typically about half) of this limit. Thus, it is impor-
+tant to avoid delivering an excessive dose of lipid since dangerous fat
+overload can occur.62 Table 5 outlines treatment recommendations.
+
+New Treatment Recommendations
+
+The use of lipid emulsion as an antidote for LAST is “off
+label,” as defined by the FDA. Our 2010 advisory suggested
+using lipid emulsion therapy at the first sign of arrhythmia, pro-
+longed seizures, or rapid clinical deterioration of the patient.
+Based on evidence that lipid shuttling is most effective early in
+the toxic event10 when local anesthetic plasma concentrations
+are at their peak, we now unequivocally recommend lipid emul-
+sion therapy soon after airway management in any LAST event
+that is judged to be potentially serious. Furthermore, because ad-
+verse effects from lipid administration specifically as an antidote
+for LAST appear to be minor and limited, we recommend erring
+on the early side of administration. The maximum lipid dose has
+
+Future Directions
+
+If the previous decade is any indication, we expect continued
+progress in our understanding of LAST—its incidence, cellular
+mechanisms, prevention, and treatment. Much work remains with
+regard to understanding the cellular and systemic mechanisms in-
+herent to local anesthetic poisoning. Advancement of this knowl-
+edge holds promise for improved resuscitation. Whether or not the
+overall incidence of LAST is truly diminishing remains open to
+debate, particularly because it pertains to the healthcare community
+at large, in nonhospital settings, and among nonanesthesiologist
+practitioners. Hopefully the future will see further development of
+local anesthetic alternatives such as neosaxitoxin, which blocks
+
+TABLE 5. Recommendations for Treatment of LAST
+
+• If signs and symptoms of LAST occur, prompt and effective airway management is crucial to preventing hypoxia, hypercapnia, and acidosis,
+which are known to potentiate LAST. (I; B)
+• Lipid emulsion therapy (I; B):
+○ Administer at the first signs of LAST, after airway management
+○ Timeliness of lipid emulsion is more important than the order of administration modality (bolus vs infusion)
+
+▪ 20% lipid emulsion BOLUS
+
+• 100 mL over 2–3 min if patient is over 70 kg
+• 1.5 mL/kg over 2–3 min if patient is less than 70 kg
+
+▪ 20% lipid emulsion INFUSION
+
+• 200–250 mL over 15–20 min if patient is over 70 kg
+• 0.25 mL/kg/min if patient is less than 70 kg (ideal body weight)
+• If circulatory stability is not attained, consider rebolus or increasing infusion to 0.5 mL/kg/min
+
+▪ Continue infusion for at least 10 min after circulatory stability is attained.
+▪ Approximately 12 mL/kg lipid emulsion is recommended as the upper limit for initial dosing. (IIb; B)
+▪ Propofol is not a substitute for lipid emulsion. (III; B)
+
+• Seizure control:
+○ If seizures occur, they should be rapidly halted with benzodiazepines. If benzodiazepines are not readily available, lipid emulsion or small
+
+doses of propofol are acceptable. (I; B)
+▪ Although propofol can stop seizures, large doses further depress cardiac function; propofol should be avoided when there are signs of
+cardiovascular compromise. (III; B)
+○ If seizures persist despite benzodiazepines, small doses of succinylcholine or similar neuromuscular blocker should be considered to minimize
+
+acidosis and hypoxemia. (I; C)
+
+• If cardiac arrest occurs:
+○ If epinephrine is used, small initial doses (≤1 μg/kg) are preferred. (IIa; B)
+○ Vasopressin is not recommended. (III; B)
+○ Avoid calcium channel blockers and β-adrenergic receptor blockers. (III; C)
+○ If ventricular arrhythmias develop, amiodarone is preferred (IIa; B); treatment with local anesthetics (lidocaine or procainamide) is not
+
+recommended. (III; B)
+
+• Failure to respond to lipid emulsion and vasopressor therapy should prompt institution of CPB (I; B). Because there can be considerable lag in
+beginning CPB, it is reasonable to notify the closest facility capable of providing it when cardiovascular compromise is first identified during an
+episode of LAST.
+• Patients with a significant CV event should be monitored for at least 4–6 h. If the event is limited to CNS symptoms that resolve quickly, they
+should be monitored for at least 2 h. (IIa; B)
+• Use written or electronic checklists as cognitive aids during the management of LAST. A dedicated reader improves adherence to the checklist. (I; A)
+
+These recommendations are intended to encourage optimal patient care but cannot ensure the avoidance of adverse outcomes. As with any practice ad-
+
+visory recommendation, these are subject to revision as knowledge advances regarding specific complications.
+
+The class of recommendation and level of evidence for each intervention are given in parenthesis (see Table 1).
+Changes from the 2010 LAST practice advisory1 are italicized.
+CPB indicates cardiopulmonary bypass.
+
+sensory conduction by binding to the external pores of noncardiac
+sodium channels and does not cross the blood-brain barrier.63
+Neosaxitoxin thus prolongs anesthesia without the risk of local
+anesthetic-induced cardio- and CNS toxicity. Until such time as
+alternative drugs come into use, the burden is on anesthesiologists
+and LAST researchers to improve our knowledge of basic mech-
+anisms, enhance early recognition, improve awareness, and build
+effective systems for prevention and treatment.
+
+To reiterate our concluding comments from the 2010 practice
+advisory, “LAST remains a significant clinical problem. Consid-
+ering 1) the extensive use of local anesthetics, 2) the frequent
+use of doses sufficient to cause significant morbidity or mortality,
+and 3) the imperfect nature of our ability to predict, prevent, de-
+tect, and treat these complications, it remains the responsibility
+of all clinicians using local anesthetics to understand their poten-
+tial for causing severe systemic toxicity and to be prepared to re-
+spond immediately when these events occur.”1 Moreover, subtle
+or undetected patient comorbidities can significantly increase sus-
+ceptibility to LAST. Practice patterns and system improvements
+may well reduce the likelihood of LASTand optimize patient safety.
+Nevertheless, although we contend that the frequency of LAST can
+be reduced, it is unlikely to be eliminated altogether—there will
+always be system errors, unrecognized patient comorbidities, and
+stochastic events that invariably arise in large populations. Although
+LAST is indeed a rare event, it still occurs despite proper tech-
+nique used by competent professionals. When LAST happens,
+recognition and preparedness make it a treatable complication of
+regional anesthesia.
+
+ACKNOWLEDGMENTS
+
+The authors thank the following colleagues who made sub-
+stantial contributions to this project through authorship of the in-
+dividual background articles from which this executive summary
+was drawn: Hospital for Special Surgery, Weill Cornell Medical
+College, New York, NY: Crispiana Cozowicz, MD; Mt. Sinai School
+of Medicine, New York, NY: Nicole Zubizarreta, MPH and Jashvant
+Poeran, MD, PhD; University of Illinois College of Medicine, Chi-
+cago, IL: Steven Roth, MD; Pritzker School of Medicine, University
+of Chicago, Chicago, IL: Monica Matsumoto, BA; Stanford University,
+Palo Alto, CA: T. Kyle Harrison, MD; and Virginia Mason Medical
+Center, Seattle, WA: Crystal M. Woodward, MD.
+
+REFERENCES
+
+1. Neal JM, Bernards CM, Butterworth JF, et al. ASRA practice
+
+advisory on local anesthetic systemic toxicity. Reg Anesth Pain Med. 2010;
+35:152–161.
+
+2. Corcoran W, Butterworth J, Weller RS, et al. Local anesthetic-induced
+cardiac toxicity: a survey of contemporary practice strategies among
+academic anesthesiology departments. Anesth Analg. 2006;103:
+1322–1326.
+
+toxicity: a review. Reg Anesth Pain Med. 2010;35:167–176.
+
+4. Di Gregorio G, Neal JM, Rosenquist RW, Weinberg GL. Clinical
+
+presentation of local anesthetic systemic toxicity: a review of published
+cases, 1979 to 2009. Reg Anesth Pain Med. 2010;35:181–187.
+
+5. Drasner K. Local anesthetic systemic toxicity: a historical perspective.
+
+Reg Anesth Pain Med. 2010;35:160–164.
+
+6. Mulroy MF, Hejtmanek MR. Prevention of local anesthetic systemic
+
+toxicity. Reg Anesth Pain Med. 2010;35:177–180.
+
+7. Weinberg GL. Treatment of local anesthetic systemic toxicity (LAST).
+
+Reg Anesth Pain Med. 2010;35:188–193.
+
+8. Kahn R, Gale EA. Gridlocked guidelines for diabetes. Lancet. 2010;375:
+
+2203–2204.
+
+9. Mörwald EE, Zubizarreta N, Cozowicz C, Poeran J, Memtsoudis SG.
+Incidence of local anesthetic systemic toxicity in orthopedic patients
+receiving peripheral nerve blocks. Reg Anesth Pain Med. 2017;42:
+442–445.
+
+10. Fettiplace MR, Weinberg G. The mechanisms underlying lipid resuscitation
+
+therapy. Reg Anesth Pain Med. 2018;43:138–149.
+
+11. Gitman M, Barrington MJ. Local anesthetic systemic toxicity: a review
+of recent case reports and registries. Reg Anesth Pain Med. 2018;43:
+124–130.
+
+12. Rubin DS, Motsumoto M, Weinberg G, Roth S. Local anesthetic
+
+systemic toxicity in total joint arthroplasty: incidence and risk factors in
+the United States from the National Inpatient Sample 1998–2013.
+Reg Anesth Pain Med. 2018;43:131–137.
+
+13. Neal JM, Woodward CM, Harrison TK. The American Society of Regional
+Anesthesia and Pain Medicine checklist for managing local anesthetic
+systemic toxicity: 2017 version. Reg Anesth Pain Med. 2018;43:150–153.
+
+14. Eagle KA, Berger PB, Calkins H, et al. ACC/AHA guideline update for
+perioperative cardiovascular evaluation for noncardiac surgery: executive
+summary: a report of the American College of Cardiology/American Heart
+Association Task Force on Practice Guidelines (Committee to Update the
+1996 Guidelines on Perioperative Cardiovascular Evaluation for
+Noncardiac Surgery). J Am Coll Cardiol. 2002;39:542–553.
+
+15. ASA Standards, Guidelines, Statements and Practice Parameters.
+Available at: http://www.asahq.org/resources/clinical-information.
+Accessed January 21, 2015.
+
+16. Neal JM, Kopp SL, Lanier WL, Pasternak JJ, Rathmell JP. Anatomy
+
+and pathophysiology of spinal cord injury associated with regional
+anesthesia and pain medicine: 2015 update. Reg Anesth Pain Med. 2015;
+40:506–525.
+
+17. Weinberg GL, VadeBoncouer TR, Ramaraju GA, Garcia-Amaro MF, Cwik
+
+MJ. Pretreatment or resuscitation with a lipid emulsion shifts the
+dose-response to bupivacaine-induced asystole in rats. Anesthesiology.
+1998;88:1071–1075.
+
+18. Fettiplace MR, Lis K, Ripper R, et al. Multi-modal contributions to
+
+detoxification of acute pharmacotoxicity by a triglyceride micro-emulsion.
+J Control Release. 2015;198:62–70.
+
+19. Dix SK, Rosner GF, Nayar M, et al. Intractable cardiac arrest due to
+
+lidocaine toxicity successfully resuscitated with lipid emulsion. Crit Care
+Med. 2011;39:872–871.
+
+20. Dureau P, Charbit B, Nicolas N, Benhamou D, Mazoit JX. Effect of
+
+Intralipid® on the dose of ropivacaine or levobupivacaine tolerated by
+volunteers. Anesthesiology. 2016;125:474–483.
+
+21. Shi K, Xia Y, Wang Q, et al. The effect of lipid emulsion on
+
+pharmacokinetics and tissue distribution of bupivacaine in rats. Anesth
+Analg. 2013;116:804–809.
+
+22. Heinonen JA, Litonius E, Salmi T, et al. Intravenous lipid emulsion
+
+given to volunteers does not affect symptoms of lidocaine brain toxicity.
+Basic Clin Pharmacol Toxicol. 2015;116:378–383.
+
+23. Fettiplace MR, Ripper R, Lis K, et al. Rapid cardiotonic effects of lipid
+
+emulsion infusion. Crit Care Med. 2013;41:e156–e162.
+
+24. Stehr SN, Ziegeler JC, Pexa A, et al. The effects of lipid infusion on
+myocardial function and bioenergetics in l-bupivacaine toxicity in the
+isolated rat heart. Anesth Analg. 2007;104:186–192.
+
+25. Fettiplace MR, Kowal K, Ripper R, et al. Insulin signaling in
+
+bupivacaine-induced cardiac toxicity: sensitization during recovery
+and potentiation by lipid emulsion. Anesthesiology. 2016;124:
+428–442.
+
+26. Lou P-H, Lucchinett E, Zhang L, et al. The mechanism of Intralipid®-
+
+mediated cardioprotection complex IV inhibition by the active
+metabolite, palmitoylcarnitine, generates reactive oxygen species
+and activates reperfusion injury salvage kinases. PLoS One. 2014;
+9:e87205.
+
+27. Rahman S, Li J, Bopassa JCJ, et al. Phosphorylation of GSK-3b mediates
+intralipid-induced cardioprotection against Ischemia/reperfusion injury.
+Anesthesiology. 2011;115:242–253.
+
+46. Weiss E, Jolly C, Dumoulin JL, et al. Convulsions in 2 patients after
+bilateral ultrasound-guided transversus abdominis plane blocks for
+Cesarean analgesia. Reg Anesth Pain Med. 2014;39:248–251.
+
+28. Mulroy MF. Systemic toxicity and cardiotoxicity from local anesthetics:
+Incidence and preventive measures. Reg Anesth Pain Med. 2002;27:
+556–561.
+
+29. Liu SS, Ortolan S, Sandoval MV, et al. Cardiac arrest and seizures
+
+caused by local anesthetic systemic toxicity after peripheral nerve blocks:
+Should we still fear the reaper? Reg Anesth Pain Med. 2016;41:5–21.
+
+30. Weinberg G, Barron G. Local anesthetic systemic toxicity (LAST): Not
+gone, hopefully not forgotten. Reg Anesth Pain Med. 2016;41:1–2.
+
+31. Premier Perspective Database. Available at: https://www.premierinc.com/
+transforming-healthcare/healthcare-performanceimprovement/premier-
+research-services/. Accessed June 13, 2016.
+
+32. Sites BD, Taenzer AH, Herrick MD, et al. Incidence of local anesthetic
+
+systemic toxicity and postoperative neurologic symptoms associated with
+12,668 ultrasound-guided nerve blocks. An analysis from a prospective
+clinical registry. Reg Anesth Pain Med. 2012;37:478–482.
+
+33. Heinonen J, Litonius E, Pitkanen M, Rosenberg P. Incidence of severe local
+anaesthetic toxicity and adoption of lipid rescue in Finnish anaesthesia
+departments in 2011–2013. Acta Anaesthesiol Scand. 2015;59:1032–1037.
+
+34. Rohrbaugh M, Kentor ML, Orebaugh SL, Williams B. Outcomes of
+
+shoulder surgery in the sitting position with interscalene nerve block: a
+single-center series. Reg Anesth Pain Med. 2013;38:28–33.
+
+35. Barrington MJ, Kluger R. Ultrasound guidance reduces the risk of local
+anesthetic systemic toxicity following peripheral nerve blockade.
+Reg Anesth Pain Med. 2013;38:289–299.
+
+36. Orebaugh SL, Williams BA, Vallejo M, Kentor ML. Adverse outcomes
+associated with stimulator-based peripheral nerve blocks with versus
+without ultrasound visualization. Reg Anesth Pain Med. 2009;34:251–255.
+
+37. Orebaugh SL, Kentor ML, Williams BA. Adverse outcomes associated
+with nerve stimulator-guided and ultrasound-guided peripheral nerve
+blocks by supervised trainees: update of a single-site database. Reg Anesth
+Pain Med. 2012;37:577–582.
+
+38. Allegri M, Bugada D, Grossi P, et al. Italian registry of complications
+
+associated with regional anesthesia (RICALOR). An incidence analysis
+from a prospective clinical survey. Minerva Anestesiol. 2016;82:392–402.
+
+39. Barrington MJ, Watts SA, Gledhill SR, et al. Preliminary results of the
+Australasian Regional Anaesthesia Collaboration: a prospective audit of
+more than 7000 peripheral nerve and plexus blocks for neurologic and other
+complications. Reg Anesth Pain Med. 2009;34:534–541.
+
+40. Ecoffey C, Lacroix F, Giaufré E, Orliaguet G, Courrèges P. Epidemiology
+and morbidity of regional anesthesia in children: a follow-up one-year
+prospective survey of the French-Language Society of Paediatric
+Anaesthesiologists (ADARPEF). Paediatr Anaesth. 2010;20:1061–1069.
+
+41. Gurnaney H, Kraemer FW, Maxwell L, Muhly WT, Schleelein L, Ganesh
+
+A. Ambulatory continuous peripheral nerve blocks in children and
+adolescents: a longitudinal 8-year single center study. Anesth Analg. 2014;
+118:621–627.
+
+Network (PRAN): a multi-institutional study of the use and incidence of
+complications of pediatric regional anesthesia. Anesth Analg. 2012;115:
+1353–1364.
+
+43. Neal JM. Ultrasound-guided regional anesthesia and patient safety: update
+of an evidence-based analysis. Reg Anesth Pain Med. 2016;41:195–204.
+
+44. Bernards CM, Kopacz DJ. Effect of epinephrine on lidocaine clearance in
+vivo: a microdialysis study in humans. Anesthesiology. 1999;91:962–968.
+
+47. Fenten MG, Rohrbach A, Wymenga AB, Stienstra R. Systemic local
+
+anesthetic toxicity after local infiltration analgesia following a polyethylene
+tibial insert exchange: a case report. Reg Anesth Pain Med. 2014;39:
+264–265.
+
+48. Chin KJ, McDonnell JG, Carvalho B, Sharkey A, Pawa A, Gadsden J.
+
+Essentials of our current understanding: abdominal wall blocks. Reg Anesth
+Pain Med. 2017;42:133–183.
+
+49. Miranda P, Corvetto MA, Altermatt FR, Araneda A, Echevarria GC,
+Cortinez LI. Levobupivacaine absorption pharmacokinetics with and
+without epinephrine during TAP block: analysis of doses based on the
+associated risk of local anaesthetic toxicity. Eur J Clin Pharmacol. 2016;
+72:1221–1227.
+
+50. Ilfeld BM, Viscusi ER, Hadzic A, et al. Safety and side effect profile of
+liposome bupivacaine (Exparel) in peripheral nerve blocks. Reg Anesth
+Pain Med. 2015;40:572–582.
+
+51. Aggarwal N. Local anesthetics systemic toxicity association with Exparel
+(bupivacaine liposome)—a pharmacovigilance evaluation. Expert Opin
+Drug Saf. 2017;5:1–7.
+
+52. Abrahams MS, Aziz MF, Fu RF, Horn JL. Ultrasound guidance compared
+with electrical neurostimulation for peripheral nerve block: a systematic
+review and meta-analysis of randomized controlled trials. Br J Anaesth.
+2009;102:408–417.
+
+53. Vasques F, Behr AU, Weinberg G, Ori C, Di Gregorio G. A review of local
+anesthetic systemic toxicity cases since publication of the American
+Society of Regional Anesthesia recommendations. To whom it may
+concern. Reg Anesth Pain Med. 2015;40:698–705.
+
+54. Neal JM. Local anesthetic systemic toxicity. Improving patient safety one
+
+step at a time. Reg Anesth Pain Med. 2013;38:259–261.
+
+55. Yu RN, Houck CS, Casta A, Blum RH. Institutional policy changes to
+prevent cardiac toxicity associated with bupivacaine penile blockade in
+infants. A A Case Rep. 2016;7:71–75.
+
+56. Wang Q-G, Wu C, Xia Y, et al. Epinephrine deteriorates pulmonary gas
+
+exchange in a rat model of bupivacaine-induced cardiotoxicity: a threshold
+dose of epinephrine. Reg Anesth Pain Med. 2017;42:432–350.
+
+57. Neal JM, Mulroy MF, Weinberg GL. American Society of Regional
+
+Anesthesia and Pain Medicine checklist for managing local anesthetic
+systemic toxicity: 2012 version. Reg Anesth Pain Med. 2012;37:16–18.
+
+58. Neal JM, Hsiung RL, Mulroy MF, Halpern BB, Dragnich AD, Slee AE.
+
+ASRA checklist improves trainee performance during a simulated episode
+of local anesthetic systemic toxicity. Reg Anesth Pain Med. 2012;37:8–15.
+
+59. McEvoy MD, Hand WR, Stoll WD, Furse CM, Nietert PJ. Adherence to
+guidelines for the management of local anesthetic systemic toxicity is
+improved by an electronic decision support tool and designated “reader”.
+Reg Anesth Pain Med. 2014;39:299–305.
+
+60. AAGBI Safety Guideline: Management of Severe Local Anaesthetic
+Toxicity. Association of Anaesthetists of Great Britain and Ireland.
+Available at: http://www.aagbi.org/sites/default/files/la_toxicity_2010_0.
+pdf. Accessed January 4, 2017.
+
+61. Reference ID: 3958413. US Food and Drug Administration. Available at:
+https://www.accessdata.fda.gov/drugsatfda_docs/label/2016/207648lbl.
+pdf. Accessed August 7, 2017.
+
+62. Fettiplace MR, Akpa BS, Rubinstein I, Weinberg G. Confusion about
+infusion: rational volume limits for intravenous lipid emulsion during
+treatment of oral overdoses. Ann Emerg Med. 2015;66:185–188.
+
+63. Templin JS, Wylie MC, Kim JD, et al. Neosaxitoxin in rat sciatic block:
+
+45. Tran DQ, Boezaart AP, Neal JM. Beyond ultrasound guidance for regional
+
+anesthesiology. Reg Anesth Pain Med. 2017;42:556–563.
+
+Improved therapeutic index using combinations with bupivacaine, with and
+without epinephrine. Anesthesiology. 2015;123:886–898.

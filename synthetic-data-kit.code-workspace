@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Debug CLI",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder}/synthetic_data_kit/cli.py",
+				"args": [
+					"--help"
+				], // You can replace this with the arguments you want to pass to the CLI
+				"console": "integratedTerminal",
+				"justMyCode": false,
+				"pythonPath": "C:\\Users\\c00627809\\AppData\\Local\\miniconda3\\envs\\synthetic-data\\python.exe"
+			}
+		]
+	}
+}
