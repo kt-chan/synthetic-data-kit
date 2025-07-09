@@ -496,7 +496,7 @@ class LLMClient:
         for i in range(0, len(message_batches), batch_size):
             batch_chunk = message_batches[i:i+batch_size]
             if verbose:
-                logger.info(f"Processing batch {i//batch_size + 1}/{(len(message_batches) + batch_size - 1) // batch_size} with {len(batch_chunk)} requests")
+                logger.info(f"Processing inference batch {i//batch_size + 1}/{(len(message_batches) + batch_size - 1) // batch_size} with {len(batch_chunk)} requests")
             
             # Import asyncio here to avoid issues if not available
             try:

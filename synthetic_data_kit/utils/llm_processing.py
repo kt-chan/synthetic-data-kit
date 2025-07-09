@@ -125,7 +125,7 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
             # Now, try to parse it
             try:
                 parsed = json.loads(json_text)
-                if isinstance(parsed, dict) and "rating" in parsed:
+                if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
                     if verbose:
                         print("Successfully parsed single JSON object")
                     return [parsed]
@@ -171,7 +171,7 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                     # Clean up newlines in the code block
                     clean_block = re.sub(r'\s*\n\s*', ' ', block.strip())
                     parsed = json.loads(clean_block)
-                    if isinstance(parsed, dict) and "rating" in parsed:
+                    if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
                         if verbose:
                             print("Successfully parsed from code block (single object)")
                         return [parsed]
@@ -209,7 +209,7 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                         # Clean up newlines in the match
                         clean_match = re.sub(r'\s*\n\s*', ' ', match)
                         parsed = json.loads(clean_match)
-                        if isinstance(parsed, dict) and "rating" in parsed:
+                        if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
                             if verbose:
                                 print("Successfully parsed using regex (single object)")
                             return [parsed]
@@ -228,7 +228,7 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
         import json5
         try:
             parsed = json5.loads(text)
-            if isinstance(parsed, dict) and "rating" in parsed:
+            if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
                 if verbose:
                     print("Successfully parsed using json5 (single object)")
                 return [parsed]

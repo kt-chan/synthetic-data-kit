@@ -10,8 +10,11 @@
             "request": "launch",
             "program": "D:\\GitHub\\synthetic-data-kit\\synthetic_data_kit\\cli.py",
             "console": "integratedTerminal",
-            // "args": "-c config.yaml ingest ./data/pdf/report.pdf"
-            "args": "-c config.yaml create ./data/output/report.txt"
+            // "args": "-c config.yaml save-as data/cleaned/report_qa_pairs_cleaned.json -f ft --storage json"
+            // "args": "-c config.yaml curate ./data/generated/report_qa_pairs.json --verbose"
+            "args": "-c config.yaml ingest ./data/pdf/report.pdf"
+            // "args": "-c config.yaml create ./data/output/report.txt"
+            // "args": "-c config.yaml --help"
             // "args": "-c config.yaml ${command:pickArgs}"
         }
     ]

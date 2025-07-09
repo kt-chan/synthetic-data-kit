@@ -108,32 +108,27 @@ def test_html_parser():
 @pytest.mark.unit
 def test_pdf_parser():
     """Test PDF parser."""
-    # Mock pdfminer.high_level.extract_text (since it's imported inside the method)
-    with patch("pdfminer.high_level.extract_text") as mock_extract:
-        mock_extract.return_value = "This is sample PDF content for testing."
+    # Create a dummy file path
+    pdf_content = "This is a test pdf file"
+    file_path = "tests/data/pdf/report.pdf"
 
-        # Create a dummy file path
-        file_path = "/dummy/path/to/file.pdf"
+    # Initialize parser
+    parser = PDFParser()
 
-        # Initialize parser
-        parser = PDFParser()
+    # Parse the file
+    content = parser.parse(file_path)
 
-        # Parse the file
-        content = parser.parse(file_path)
+    # Test saving content
+    with tempfile.TemporaryDirectory() as temp_dir:
+        output_path = os.path.join(temp_dir, "output.txt")
+        parser.save(content, output_path)
 
-        # Check that extract_text was called
-        mock_extract.assert_called_once_with(file_path)
+        # Check that the file was created
+        assert os.path.exists(output_path), f"File {output_path} was not created"
+        
+        # Check that the file was saved correctly
+        with open(output_path) as f:
+            saved_content = f.read()
 
-        # Check that content matches our mock return value
-        assert content == "This is sample PDF content for testing."
-
-        # Test saving content
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_path = os.path.join(temp_dir, "output.txt")
-            parser.save(content, output_path)
-
-            # Check that the file was saved correctly
-            with open(output_path) as f:
-                saved_content = f.read()
-
-            assert saved_content == content
+         # Add additional assertions about the content if needed
+        assert saved_content.strip()  == pdf_content

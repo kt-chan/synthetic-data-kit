@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "tests/unit/test_rag_setup.py", "-s", "-m", "unit"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
