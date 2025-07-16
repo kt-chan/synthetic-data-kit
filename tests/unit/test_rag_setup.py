@@ -1,50 +1,59 @@
 """Unit tests for document parsers."""
 
 import pytest
-from pymilvus import MilvusClient
-from pymilvus import model
+import chromadb
+import uuid
+
+# 连接 docker-compose 里的 chroma 服务
 
 
 @pytest.mark.unit
-def test_Milvus_setup():
+def test_ragdb_setup():
     """Test RAG Setup."""
-    client = MilvusClient(uri="http://ubuntu.wsl.local:19530", token="root:Milvus")
-    client.list_databases()
-    assert len(client.list_databases()) == 1
+    client = chromadb.HttpClient(host="ubuntu.wsl.local", port=9000)
+    # 心跳检测
+    heartbeat = client.heartbeat()
+    print("heartbeat:", heartbeat)
+    assert heartbeat > 1
 
 
 @pytest.mark.unit
-def test_rag_setup():
-    client = MilvusClient(uri="http://ubuntu.wsl.local:19530", token="root:Milvus")
+def test_ragdb_access():
+    client = chromadb.HttpClient(host="ubuntu.wsl.local", port=9000)
 
-    if client.has_collection(collection_name="demo_collection"):
-        client.drop_collection(collection_name="demo_collection")
-        client.create_collection(
-            collection_name="demo_collection",
-            dimension=768,  # The vectors we will use in this demo has 768 dimensions
-        )
+    # Create collection. get_collection, get_or_create_collection, delete_collection also available!
+    try:
+        collection = client.delete_collection(name="all-my-documents")
+        collection = client.create_collection(name="all-my-documents")
+    except Exception as e:
+        # Collection does not exist, create it
+        collection = client.create_collection(name="all-my-documents")
 
-    assert len(client.list_collections()) == 1
+    # Add docs to the collection. Can also update and delete. Row-based API coming soon!
+    collection.add(
+        documents=[
+            "I love docker-compose",
+            "Chroma is a vector DB",
+        ],  # we handle tokenization, embedding, and indexing automatically. You can skip that and add your own embeddings as well
+        metadatas=[{"source": "notion"}, {"source": "google-docs"}],  # filter on these!
+        ids=["doc1", "doc2"],  # unique for each doc
+    )
 
-    embedding_fn = model.DefaultEmbeddingFunction()
+    # Query/search 2 most similar results. You can also .get by id
+    results = collection.query(
+        query_texts=["how to use chroma"],
+        n_results=1,
+        # where={"metadata_field": "is_equal_to_this"}, # optional filter
+        # where_document={"$contains":"search_string"}  # optional filter
+    )
+    print("Top result:", results["documents"][0][0])
 
-    # Text strings to search from.
-    docs = [
-        "Artificial intelligence was founded as an academic discipline in 1956.",
-        "Alan Turing was the first person to conduct substantial research in AI.",
-        "Born in Maida Vale, London, Turing was raised in southern England.",
-    ]
+    assert len(results["documents"]) >= 1 and results["documents"][0][0].strip() == "Chroma is a vector DB"
 
-    vectors = embedding_fn.encode_documents(docs)
-    # The output vector has 768 dimensions, matching the collection that we just created.
-    print("Dim:", embedding_fn.dim, vectors[0].shape)  # Dim: 768 (768,)
-
-    # Each entity has id, vector representation, raw text, and a subject label that we use
-    # to demo metadata filtering later.
-    data = [
-        {"id": i, "vector": vectors[i], "text": docs[i], "subject": "history"}
-        for i in range(len(vectors))
-    ]
-
-    print("Data has", len(data), "entities, each with fields: ", data[0].keys())
-    print("Vector dim:", len(data[0]["vector"]))
+@pytest.mark.unit
+def test_ragdb_query():
+    client = chromadb.HttpClient(host="ubuntu.wsl.local", port=9000)
+    collection = client.get_or_create_collection(name="synthetic_data_kit")
+    results = collection.query(query_texts=["what is last stand for?"],n_results=3, )
+    print("Top result:", results["documents"][0][0])
+    

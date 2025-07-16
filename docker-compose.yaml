@@ -27,7 +27,7 @@ services:
       - vllm
 
   vllm:
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:v0.9.2
     container_name: vllm
     networks:
       - llm-network
@@ -65,7 +65,32 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  chroma:
+    container_name: chroma
+    image: ghcr.io/chroma-core/chroma:1.0.13
+    volumes:
+      - chroma:/chroma/.chroma/index
+    ports:
+      - 9000:8000
+    networks:
+      - llm-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - vllm
+      
   etcd:
+    profiles: [debug]
     container_name: milvus-etcd
     image: quay.io/coreos/etcd:v3.5.18
     environment:
@@ -90,6 +115,7 @@ services:
         max-file: "3"
 
   minio:
+    profiles: [debug]
     container_name: milvus-minio
     image: minio/minio:RELEASE.2023-03-20T20-16-18Z
     environment:
@@ -104,7 +130,7 @@ services:
       - milvus-minio:/minio_data
     command: minio server /minio_data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://minio:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -115,6 +141,7 @@ services:
         max-file: "3"
 
   milvus:
+    profiles: [debug]
     container_name: milvus-standalone
     image: milvusdb/milvus:v2.6.0-rc1
     command: ["milvus", "run", "standalone"]
@@ -123,13 +150,12 @@ services:
     environment:
       ETCD_ENDPOINTS: etcd:2379
       MINIO_ADDRESS: minio:9000
-      MQ_TYPE: woodpecker
     networks:
       - llm-network
     volumes:
       - milvus-core:/var/lib/milvus
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      test: ["CMD", "curl", "-f", "http://milvus:9091/healthz"]
       interval: 30s
       start_period: 90s
       timeout: 20s
@@ -149,6 +175,7 @@ services:
 volumes:
   open-webui:
   vllm:
+  chroma:
   milvus-core:
   milvus-etcd:
   milvus-minio:

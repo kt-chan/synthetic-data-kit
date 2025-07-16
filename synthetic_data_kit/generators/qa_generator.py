@@ -14,6 +14,10 @@ from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, Ti
 
 from synthetic_data_kit.models.llm_client import LLMClient
 from synthetic_data_kit.utils.text import split_into_chunks
+from synthetic_data_kit.utils.rag_processor import (
+    reset_collection,
+    wrte_chunks,
+)
 from synthetic_data_kit.utils.llm_processing import (
     parse_summary,
     parse_qa_pairs,
@@ -49,17 +53,16 @@ class QAGenerator:
         chunks = split_into_chunks(document_text, chunk_size=chunk_size, overlap=overlap)
         return chunks
 
-    def generate_summary(self, document_text: str) -> str:
+    def generate_summary(
+        self, document_text: str, fileName: str = None, enable_rag: bool = False
+    ) -> str:
         """Generate a summary of the document"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
         batch_size = self.generation_config.get("batch_size", 32)
+        max_seq_len = self.generation_config.get("max_seq_len", 4000) - 1000
 
         # Split text into chunks
         chunks = self.split_article_into_chunks(document_text)
-        if verbose:
-            print(f"Generating Summary Sections ...")
-            print(f"Document split into {len(chunks)} chunks")
-            print(f"Using batch size of {batch_size}")
 
         # Get summary generation prompt template
         summary_prompt_template = get_prompt(self.config, "summary")
@@ -76,30 +79,63 @@ class QAGenerator:
                 ]
                 all_messages.append(messages)
 
-            print(f"Cut a doc size of {len(document_text)} into {len(chunks)} chunks to generate summary...")
+            print(
+                f"Cut a doc size of {len(document_text)} into {len(chunks)} chunks to generate summary..."
+            )
+
+            if verbose:
+                print(f"Messages: {all_messages}")
+
             summaries = self.batch_inference(all_messages, chunks, parse_summary)
+
+            """
+            Write chunks with metadata into vector database
+            because batch_inference may return empty data, we have to map chunkid to summary
+            """
+            if enable_rag:
+                fileNames = [fileName for i in range(len(chunks))]
+                metas = [
+                    {"filename": f, "id": s["id"], "summary": s["data"]}
+                    for f, s in zip(fileNames, summaries)
+                ]
+                rag_chunks = []
+                rag_metas = []
+                rag_summary = []
+                for item in metas:
+                    rag_chunks.append(chunks[item["id"]])
+                    rag_metas.append({"filename": item["filename"], "summary": item["summary"]})
+                    rag_summary.append(item["summary"])
+                reset_collection()
+                wrte_chunks(rag_chunks, rag_metas)
+
+            summaries = list(map(lambda x: x.get("data"), summaries))
             combined_summary = "\n".join(summaries)
 
             # Get summary generation prompt template for consolidation
             messages = [
                 {"role": "system", "content": summary_prompt_template},
-                {"role": "user", "content": combined_summary},
+                {"role": "user", "content": combined_summary[:max_seq_len]},
             ]
         else:
             messages = [
                 {"role": "system", "content": summary_prompt_template},
-                {"role": "user", "content": document_text},
+                {"role": "user", "content": document_text[:max_seq_len]},
             ]
 
-        print(f"Summarizing chunks sector output of {len(combined_summary)} ...")
+        print(f"Summarizing chunks sector output of {len(str(messages))} ...")
         consolidated_summary = self.client.chat_completion(
             messages, temperature=0.1  # Use lower temperature for summaries
         )
 
-        return consolidated_summary
+        return consolidated_summary.strip()
 
     def generate_qa_pairs(
-        self, document_text: str, summary: str, num_pairs: int = 25
+        self,
+        document_text: str,
+        summary: str,
+        num_pairs: int = 25,
+        fileName: str = None,
+        enable_rag: bool = False,
     ) -> List[Dict[str, str]]:
         """Generate QA pairs from the document using batched processing"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
@@ -107,13 +143,11 @@ class QAGenerator:
 
         # Split text into chunks
         chunks = self.split_article_into_chunks(document_text)
-
-        if verbose:
-            print(f"Generating QA pairs...")
-            print(f"Document split into {len(chunks)} chunks")
-            print(f"Using batch size of {batch_size}")
-
         pairs_per_chunk = max(1, round(num_pairs / len(chunks)))
+
+        print(f"Generating QA pairs...")
+        print(f"Document split into {len(chunks)} chunks")
+        print(f"With {pairs_per_chunk} QA pairs in a chunk")
 
         # Get QA generation prompt template
         qa_prompt_template = get_prompt(self.config, "qa_generation")
@@ -129,10 +163,15 @@ class QAGenerator:
             messages = [{"role": "system", "content": qa_prompt}]
             all_messages.append(messages)
 
-        print(f"Processing {len(chunks)} chunks to generate QA pairs with {pairs_per_chunk} each...")
-        return self.batch_inference(all_messages, chunks, parse_qa_pairs)
+        print(
+            f"Processing {len(chunks)} chunks to generate {pairs_per_chunk} QA pairs per chunk..."
+        )
+        result = self.batch_inference(all_messages, chunks, parse_qa_pairs)
+        return result
 
-    def batch_inference(self, all_messages: str, chunks: List[str], taskFunc) -> List[Dict[str, str]]:
+    def batch_inference(
+        self, all_messages: str, chunks: List[str], taskFunc
+    ) -> List[Dict[str, str]]:
         """Inference using batched processing"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
         temperature = self.generation_config.get("temperature", 0.7)
@@ -179,7 +218,7 @@ class QAGenerator:
                 print(f"Processing batch {batch_num}/{total_batches}...", end="\r")
             else:
                 print(
-                    f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks"
+                    f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks ..."
                 )
 
             try:
@@ -191,7 +230,7 @@ class QAGenerator:
                 # Process each response in the batch
                 for j, response in enumerate(batch_responses):
                     chunk_index = batch_start + j
-                    chunk_pairs = taskFunc(response)
+                    chunk_pairs = taskFunc(chunk_index, response)
                     if isinstance(chunk_pairs, list):
                         all_inference_outputs.extend(chunk_pairs)
                     else:
@@ -199,6 +238,8 @@ class QAGenerator:
 
                     if verbose:
                         print(f"Generated {len(chunk_pairs)} pairs from chunk {chunk_index+1}")
+                        if len(chunk_pairs) == 0:
+                            print(f"Empty resultset found {batch_messages}")
 
                 # Update progress bar if in verbose mode
                 if progress_ctx and generate_task:
@@ -308,7 +349,7 @@ class QAGenerator:
         return rated_pairs, metrics
 
     def process_document(
-        self, document_text: str, num_pairs: int = 25, verbose: bool = False
+        self, document_text: str, num_pairs: int = 25, fileName: str = None, verbose: bool = False
     ) -> Dict[str, Any]:
         """Process a document to generate QA pairs without rating"""
         # Set the verbose environment variable
@@ -317,11 +358,19 @@ class QAGenerator:
         else:
             os.environ["SDK_VERBOSE"] = "false"
 
+        enable_rag = self.curate_config.get("enable_rag", False)
+
         # Generate summary
-        summary = self.generate_summary(document_text)
+        summary = self.generate_summary(document_text, fileName=fileName, enable_rag=enable_rag)
 
         # Generate QA pairs
-        qa_pairs = self.generate_qa_pairs(document_text, summary, num_pairs=num_pairs)
+        qa_pairs = self.generate_qa_pairs(
+            document_text,
+            summary=summary,
+            num_pairs=num_pairs,
+            fileName=fileName,
+            enable_rag=enable_rag,
+        )
 
         # Prepare result - no rating at this stage
         result = {"summary": summary, "qa_pairs": qa_pairs}

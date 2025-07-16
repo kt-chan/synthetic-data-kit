@@ -81,7 +81,8 @@ def process_file(
         result = generator.process_document(
             document_text,
             num_pairs=num_pairs,
-            verbose=verbose
+            fileName = file_path, 
+            verbose=verbose,
         )
         
         # Save output
