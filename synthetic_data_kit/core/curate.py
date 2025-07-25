@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from synthetic_data_kit.models.llm_client import LLMClient
-from synthetic_data_kit.generators.qa_generator import QAGenerator
+from synthetic_data_kit.utils.rag_processor import RAGProccesor
 from synthetic_data_kit.utils.config import get_curate_config, get_prompt
 from synthetic_data_kit.utils.llm_processing import convert_to_conversation_format, parse_ratings
 
@@ -69,9 +69,6 @@ def curate_qa_pairs(
         cleanup_config = get_curate_config(config)
         threshold = cleanup_config.get("threshold", 7.0)
 
-    # Create QA generator
-    generator = QAGenerator(client, config_path)
-
     # Get configuration
     curate_config = get_curate_config(client.config)
 
@@ -104,6 +101,10 @@ def curate_qa_pairs(
     # @TODO RAG Checking, 
     # 1. add RAG for context checking
     # 2. add Graph Building logics
+
+    # Create QA generator
+    ragProccesor = RAGProccesor(client, config_path)
+
     all_messages = []
     for batch in batches:
         batch_json = json.dumps(batch, indent=2)

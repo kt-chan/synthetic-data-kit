@@ -53,7 +53,7 @@ def test_ragdb_access():
 @pytest.mark.unit
 def test_ragdb_query():
     client = chromadb.HttpClient(host="ubuntu.wsl.local", port=9000)
-    collection = client.get_or_create_collection(name="synthetic_data_kit")
-    results = collection.query(query_texts=["what is last stand for?"],n_results=3, )
+    collection = client.get_or_create_collection(name="all-my-documents")
+    results = collection.query(query_texts=["what is Chroma?"],n_results=3)
     print("Top result:", results["documents"][0][0])
     

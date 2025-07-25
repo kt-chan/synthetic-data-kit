@@ -120,6 +120,12 @@ def get_curate_config(config: Dict[str, Any]) -> Dict[str, Any]:
         'temperature': 0.1
     })
 
+def get_rag_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Get curation configuration"""
+    return config.get('rag', {
+        'collection_name': "synthetic_data_kit"
+    })
+
 def get_format_config(config: Dict[str, Any]) -> Dict[str, Any]:
     """Get format configuration"""
     return config.get('format', {
