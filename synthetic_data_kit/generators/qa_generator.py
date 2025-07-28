@@ -53,10 +53,46 @@ class QAGenerator:
         chunks = split_into_chunks(document_text, chunk_size=chunk_size, overlap=overlap)
         return chunks
 
-    def refine_qa_pairs(
-        self,
-        qa_pairs: List[Dict[str, str]]
-    ) -> List[Dict[str, str]]:
+    def write2rag(self, fileName: str, chunks: List[str], summaries: List[Dict[str, str]], truncate=False) -> bool:
+        return self._write2rag(fileName, chunks, summaries, truncate)
+
+    def write2ragItem(self, fileName: str, chunk: str, summary: Dict[str, str], truncate=False) -> bool:
+        chunks = [chunk]
+        summaries = [{"id": 0, "data": summary}]
+        return self._write2rag(fileName, chunks, summaries, truncate)
+
+    def _write2rag(
+        self, fileName: str, chunks: List[str], summaries: List[Dict[str, str]], truncate=False
+    ) -> bool:
+        """
+        Write chunks with metadata into vector database
+        because batch_inference may return empty data, we have to map chunkid to summary
+        """
+        try:
+            enable_rag = self.rag_config.get("enable_rag", False)
+
+            if enable_rag:
+                fileNames = [fileName for _ in range(len(chunks))]
+                metas = [
+                    {"filename": f, "id": s["id"], "summary": s["data"]}
+                    for f, s in zip(fileNames, summaries)
+                ]
+                ragClient = RAGProccesor(self.client, self.config_path)
+                rag_chunks = []
+                rag_metas = []
+                for item in metas:
+                    rag_chunks.append(chunks[item["id"]])
+                    rag_metas.append({"filename": item["filename"], "summary": item["summary"]})
+
+                ragClient.wrte_chunks(rag_chunks, rag_metas, truncate)
+
+            return True
+        except Exception as e:
+            # Optionally, you can log the exception here
+            print(f"An error occurred: {e}")
+            return False
+
+    def refine_qa_pairs(self, qa_pairs: List[Dict[str, str]]) -> List[Dict[str, str]]:
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
         batch_size = self.generation_config.get("batch_size", 32)
         enable_rag = self.rag_config.get("enable_rag", False)
@@ -64,8 +100,8 @@ class QAGenerator:
         if enable_rag == True:
             ragClient = RAGProccesor(self.client, self.config_path)
             results: List[Dict[str, str]] = []
-            for qa_pair in qa_pairs: 
-                question = qa_pair.get("question", "") 
+            for qa_pair in qa_pairs:
+                question = qa_pair.get("question", "")
                 answer = qa_pair.get("answer", "")
                 if len(question) > 0 and len(answer) > 0:
                     results.append(ragClient.query(question, answer))
@@ -75,9 +111,6 @@ class QAGenerator:
     def generate_summary(self, document_text: str, fileName: str = None) -> str:
         """Generate a summary of the document"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
-        batch_size = self.generation_config.get("batch_size", 32)
-        enable_rag = self.rag_config.get("enable_rag", False)
-        collection_name = self.rag_config.get("collection_name", "default")
         max_seq_len = self.generation_config.get("max_seq_len", 4000) - 1000
 
         # Split text into chunks
@@ -86,6 +119,7 @@ class QAGenerator:
         # Get summary generation prompt template
         summary_prompt_template = get_prompt(self.config, "summary")
         messages = []
+        rag_truncate = True
 
         if len(chunks) > 1:
             # Prepare all message batches for each chunk section summary
@@ -107,25 +141,9 @@ class QAGenerator:
 
             summaries = self.batch_inference(all_messages, chunks, parse_summary)
 
-            """
-            Write chunks with metadata into vector database
-            because batch_inference may return empty data, we have to map chunkid to summary
-            """
-            if enable_rag:
-                fileNames = [fileName for i in range(len(chunks))]
-                metas = [
-                    {"filename": f, "id": s["id"], "summary": s["data"]}
-                    for f, s in zip(fileNames, summaries)
-                ]
-                ragClient = RAGProccesor(self.client, self.config_path)
-                rag_chunks = []
-                rag_metas = []
-                for item in metas:
-                    rag_chunks.append(chunks[item["id"]])
-                    rag_metas.append({"filename": item["filename"], "summary": item["summary"]})
-
-                ragClient.wrte_chunks(rag_chunks, rag_metas, truncate=True)
-
+            # Write chunks to rag for better QA pair generation
+            self.write2rag(fileName, chunks, summaries, truncate=True)
+            rag_truncate = False
             summaries = list(map(lambda x: x.get("data"), summaries))
             combined_summary = "\n".join(summaries)
 
@@ -135,6 +153,7 @@ class QAGenerator:
                 {"role": "user", "content": combined_summary[:max_seq_len]},
             ]
         else:
+
             messages = [
                 {"role": "system", "content": summary_prompt_template},
                 {"role": "user", "content": document_text[:max_seq_len]},
@@ -144,7 +163,8 @@ class QAGenerator:
         consolidated_summary = self.client.chat_completion(
             messages, temperature=0.1  # Use lower temperature for summaries
         )
-
+        # Write chunks to rag for better QA pair generation
+        self.write2ragItem(fileName, document_text[:max_seq_len], consolidated_summary, rag_truncate)
         return consolidated_summary.strip()
 
     def generate_qa_pairs(
@@ -185,14 +205,13 @@ class QAGenerator:
         print(
             f"Processing {len(chunks)} chunks to generate {pairs_per_chunk} QA pairs per chunk..."
         )
-        
+
         result = self.batch_inference(all_messages, chunks, parse_qa_pairs)
 
         ## Update QA Pair with RAG
         ## @TODO
         self.refine_qa_pairs(result)
 
-        
         return result
 
     def batch_inference(
