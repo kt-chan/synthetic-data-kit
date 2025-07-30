@@ -28,6 +28,11 @@ from synthetic_data_kit.utils.config import (
     get_rag_config,
     get_prompt,
 )
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class QAGenerator:
@@ -53,10 +58,14 @@ class QAGenerator:
         chunks = split_into_chunks(document_text, chunk_size=chunk_size, overlap=overlap)
         return chunks
 
-    def write2rag(self, fileName: str, chunks: List[str], summaries: List[Dict[str, str]], truncate=False) -> bool:
+    def write2rag(
+        self, fileName: str, chunks: List[str], summaries: List[Dict[str, str]], truncate=False
+    ) -> bool:
         return self._write2rag(fileName, chunks, summaries, truncate)
 
-    def write2ragItem(self, fileName: str, chunk: str, summary: Dict[str, str], truncate=False) -> bool:
+    def write2ragItem(
+        self, fileName: str, chunk: str, summary: Dict[str, str], truncate=False
+    ) -> bool:
         chunks = [chunk]
         summaries = [{"id": 0, "data": summary}]
         return self._write2rag(fileName, chunks, summaries, truncate)
@@ -84,27 +93,41 @@ class QAGenerator:
                     rag_chunks.append(chunks[item["id"]])
                     rag_metas.append({"filename": item["filename"], "summary": item["summary"]})
 
-                ragClient.wrte_chunks(rag_chunks, rag_metas, truncate)
+                if len(rag_chunks) > 0 and len(rag_metas) > 0:
+                    ragClient.wrte_chunks(rag_chunks, rag_metas, truncate)
 
             return True
         except Exception as e:
             # Optionally, you can log the exception here
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred in writing to full text search datastore: {e}")
             return False
 
     def refine_qa_pairs(self, qa_pairs: List[Dict[str, str]]) -> List[Dict[str, str]]:
-        verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
-        batch_size = self.generation_config.get("batch_size", 32)
-        enable_rag = self.rag_config.get("enable_rag", False)
 
+        enable_rag = self.rag_config.get("enable_rag", False)
+        """
+        @TODO
+        Update this to batch mode to speed up QA refinement
+        """
         if enable_rag == True:
             ragClient = RAGProccesor(self.client, self.config_path)
             results: List[Dict[str, str]] = []
-            for qa_pair in qa_pairs:
-                question = qa_pair.get("question", "")
-                answer = qa_pair.get("answer", "")
-                if len(question) > 0 and len(answer) > 0:
-                    results.append(ragClient.query(question, answer))
+            for index, qa_pair in enumerate(qa_pairs):
+                logger.info(f"Processing QA Refinement for the {index} / {len(qa_pairs)}")
+                try:
+                    question = qa_pair.get("question", "")
+                    answer = qa_pair.get("answer", "")
+                    if len(question) > 0 and len(answer) > 0:
+                        message = ragClient.query(question, answer)
+                        response = self.client.chat_completion(message, temperature=0.1)
+                        response_json = json.loads(response)
+                        if isinstance(response_json, list) and len(response_json) == 1:
+                            results.append(response_json[0])
+                        else:
+                            logger.error(f"Error return in qa refinement for response {response}")
+                except Exception as e:
+                    logger.error(f"Exception occurred during QA refinement: {e}")
+                    continue
             return results
         return qa_pairs
 
@@ -118,10 +141,12 @@ class QAGenerator:
 
         # Get summary generation prompt template
         summary_prompt_template = get_prompt(self.config, "summary")
+        consolidated_summary = ""
         messages = []
         rag_truncate = True
 
         if len(chunks) > 1:
+            # Loop through the chunks
             # Prepare all message batches for each chunk section summary
             all_messages = []
             for i, chunk in enumerate(chunks):
@@ -132,17 +157,19 @@ class QAGenerator:
                 ]
                 all_messages.append(messages)
 
-            print(
+            # Batch Processing with multiple messages
+            logger.info(
                 f"Cut a doc size of {len(document_text)} into {len(chunks)} chunks to generate summary..."
             )
 
             if verbose:
-                print(f"Messages: {all_messages}")
+                logger.info(f"Messages: {all_messages}")
 
+            # Get batch output for summaries of all chunks
             summaries = self.batch_inference(all_messages, chunks, parse_summary)
 
             # Write chunks to rag for better QA pair generation
-            self.write2rag(fileName, chunks, summaries, truncate=True)
+            self.write2rag(fileName, chunks, summaries, truncate=rag_truncate)
             rag_truncate = False
             summaries = list(map(lambda x: x.get("data"), summaries))
             combined_summary = "\n".join(summaries)
@@ -150,21 +177,32 @@ class QAGenerator:
             # Get summary generation prompt template for consolidation
             messages = [
                 {"role": "system", "content": summary_prompt_template},
-                {"role": "user", "content": combined_summary[:max_seq_len]},
+                {"role": "user", "content": combined_summary[:max_seq_len].strip()},
             ]
-        else:
 
+            logger.info(f"Summarizing chunks sector output of {len(str(messages))} ...")
+            consolidated_summary = self.client.chat_completion(
+                messages, temperature=0.1  # Use lower temperature for summaries
+            )
+
+        else:
+            # Only one full chunk of one big doc
+            # Get summary generation prompt template for consolidation
             messages = [
                 {"role": "system", "content": summary_prompt_template},
                 {"role": "user", "content": document_text[:max_seq_len]},
             ]
 
-        print(f"Summarizing chunks sector output of {len(str(messages))} ...")
-        consolidated_summary = self.client.chat_completion(
-            messages, temperature=0.1  # Use lower temperature for summaries
-        )
-        # Write chunks to rag for better QA pair generation
-        self.write2ragItem(fileName, document_text[:max_seq_len], consolidated_summary, rag_truncate)
+            logger.info(f"Summarizing chunks sector output of {len(str(messages))} ...")
+            consolidated_summary = self.client.chat_completion(
+                messages, temperature=0.1  # Use lower temperature for summaries
+            )
+
+            # Write chunks to rag for better QA pair generation
+            self.write2ragItem(
+                fileName, document_text[:max_seq_len], consolidated_summary, rag_truncate
+            )
+
         return consolidated_summary.strip()
 
     def generate_qa_pairs(
@@ -184,9 +222,9 @@ class QAGenerator:
         chunks = self.split_article_into_chunks(document_text)
         pairs_per_chunk = max(1, round(num_pairs / len(chunks)))
 
-        print(f"Generating QA pairs...")
-        print(f"Document split into {len(chunks)} chunks")
-        print(f"With {pairs_per_chunk} QA pairs in a chunk")
+        logger.info(f"Generating QA pairs...")
+        logger.info(f"Document split into {len(chunks)} chunks")
+        logger.info(f"With {pairs_per_chunk} QA pairs in a chunk")
 
         # Get QA generation prompt template
         qa_prompt_template = get_prompt(self.config, "qa_generation")
@@ -202,15 +240,17 @@ class QAGenerator:
             messages = [{"role": "system", "content": qa_prompt}]
             all_messages.append(messages)
 
-        print(
+        logger.info(
             f"Processing {len(chunks)} chunks to generate {pairs_per_chunk} QA pairs per chunk..."
         )
 
         result = self.batch_inference(all_messages, chunks, parse_qa_pairs)
+        logger.info(f"QA Generation: {len(result)} outputs in total.")
 
         ## Update QA Pair with RAG
-        ## @TODO
-        self.refine_qa_pairs(result)
+        if result and len(result) > 0 and enable_rag:
+            logger.info(f"refining qa-pairs, total number: {len(result)} ...")
+            result = self.refine_qa_pairs(result)
 
         return result
 
@@ -259,12 +299,9 @@ class QAGenerator:
             total_batches = (len(chunks) + batch_size - 1) // batch_size
 
             # Simple progress indicator for non-verbose mode
-            if not verbose:
-                print(f"Processing batch {batch_num}/{total_batches}...", end="\r")
-            else:
-                print(
-                    f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks ..."
-                )
+            logger.info(
+                f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks ..."
+            )
 
             try:
                 # Process the batch
@@ -274,25 +311,27 @@ class QAGenerator:
 
                 # Process each response in the batch
                 for j, response in enumerate(batch_responses):
-                    chunk_index = batch_start + j
-                    chunk_pairs = taskFunc(chunk_index, response)
-                    if isinstance(chunk_pairs, list):
-                        all_inference_outputs.extend(chunk_pairs)
-                    else:
-                        all_inference_outputs.append(chunk_pairs)
-
-                    if verbose:
-                        print(f"Generated {len(chunk_pairs)} pairs from chunk {chunk_index+1}")
-                        if len(chunk_pairs) == 0:
-                            print(f"Empty resultset found {batch_messages}")
-
+                    try:
+                        chunk_index = batch_start + j
+                        chunk_pairs = taskFunc(chunk_index, response)
+                        if chunk_pairs and len(chunk_pairs) > 0:
+                            all_inference_outputs.extend(chunk_pairs)
+                        else:
+                            raise Exception(
+                                f"Parsing error with parser: {taskFunc.__name__} for chunk {chunk_index} with data {response}"
+                            )
+                    except Exception as e:
+                        logger.error(
+                            f"Parsing error with parser: {taskFunc.__name__} for data {response}"
+                        )
+                        continue
                 # Update progress bar if in verbose mode
                 if progress_ctx and generate_task:
                     progress_ctx.update(generate_task, advance=current_batch_size)
 
             except Exception as e:
                 if verbose:
-                    print(f"  Error processing batch {batch_num}: {str(e)}")
+                    logger.error(f"  Error processing batch {batch_num}: {str(e)}")
 
                 # Update progress bar if in verbose mode
                 if progress_ctx and generate_task:
@@ -304,11 +343,12 @@ class QAGenerator:
 
         # Clear the progress line in non-verbose mode
         if not verbose:
-            print(" " * 80, end="\r")
-            print("Batch processing complete.")
+            logger.info("Batch processing complete.")
 
         # Always print summary information, even in non-verbose mode
-        print(f"Generated {len(all_inference_outputs)} chunks output in total")
+        logger.info(
+            f"Generated {len(all_inference_outputs)} outputs in batch inference with parser: {taskFunc.__name__}"
+        )
         return all_inference_outputs
 
     # def rate_qa_pairs(
@@ -325,7 +365,7 @@ class QAGenerator:
     #         threshold = self.curate_config.get("threshold", 7.0)
 
     #     if verbose:
-    #         print(f"Evaluating {len(qa_pairs)} pairs...")
+    #         logger.info(f"Evaluating {len(qa_pairs)} pairs...")
 
     #     # Get rating config
     #     batch_size = self.curate_config.get("batch_size", 8)
@@ -354,7 +394,7 @@ class QAGenerator:
 
     #         for i, batch in enumerate(batches):
     #             if verbose:
-    #                 print(f"Rating batch {i+1}/{len(batches)}...")
+    #                 logger.info(f"Rating batch {i+1}/{len(batches)}...")
     #             batch_json = json.dumps(batch, indent=2)
 
     #             # Format the rating prompt with pairs
@@ -375,7 +415,7 @@ class QAGenerator:
 
     #             except Exception as e:
     #                 if verbose:
-    #                     print(f"Error rating batch {i+1}: {str(e)}")
+    #                     logger.info(f"Error rating batch {i+1}: {str(e)}")
 
     #             time.sleep(0.5)  # Avoid rate limits
     #             progress.update(rating_task, advance=1)
@@ -389,8 +429,8 @@ class QAGenerator:
     #     }
 
     #     # Always print summary information, even in non-verbose mode
-    #     print(f"Keeping {len(rated_pairs)} out of {len(qa_pairs)} pairs (threshold: {threshold})")
-    #     print(f"Average score: {metrics['avg_score']}")
+    #     logger.info(f"Keeping {len(rated_pairs)} out of {len(qa_pairs)} pairs (threshold: {threshold})")
+    #     logger.info(f"Average score: {metrics['avg_score']}")
     #     return rated_pairs, metrics
 
     def process_document(

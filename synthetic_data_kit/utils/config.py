@@ -8,6 +8,11 @@ import yaml
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Default config location relative to the package (original)
 ORIGINAL_CONFIG_PATH = os.path.abspath(
@@ -38,15 +43,15 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Configuration file not found at {config_path}")
     
-    print(f"Loading config from: {config_path}")
+    logger.info(f"Loading config from: {config_path}")
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
     
     # Debug: Print LLM provider if it exists
     if 'llm' in config and 'provider' in config['llm']:
-        print(f"Config has LLM provider set to: {config['llm']['provider']}")
+        logger.info(f"Config has LLM provider set to: {config['llm']['provider']}")
     else:
-        print("Config does not have LLM provider set")
+        logger.info("Config does not have LLM provider set")
     
     return config
 
@@ -77,9 +82,9 @@ def get_llm_provider(config: Dict[str, Any]) -> str:
     """
     llm_config = config.get('llm', {})
     provider = llm_config.get('provider', 'vllm')
-    print(f"get_llm_provider returning: {provider}")
+    logger.info(f"get_llm_provider returning: {provider}")
     if provider != 'api-endpoint' and 'llm' in config and 'provider' in config['llm'] and config['llm']['provider'] == 'api-endpoint':
-        print(f"WARNING: Config has 'api-endpoint' but returning '{provider}'")
+        logger.info(f"WARNING: Config has 'api-endpoint' but returning '{provider}'")
     return provider
 
 def get_vllm_config(config: Dict[str, Any]) -> Dict[str, Any]:

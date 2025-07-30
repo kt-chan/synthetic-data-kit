@@ -24,6 +24,11 @@ from synthetic_data_kit.utils.config import (
 from sentence_transformers import SentenceTransformer, util
 from rank_bm25 import BM25Okapi
 import numpy as np
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class RAGProccesor:
@@ -69,13 +74,15 @@ class RAGProccesor:
 
         # Create collection. get_collection, get_or_create_collection, delete_collection also available!
         if truncate:
+            logger.info(f"Truncating datastores .... ")
             try:
                 collection = client.delete_collection(name=collection_name)
                 collection = client.create_collection(name=collection_name)
-
+                logger.info(f"Truncated vector datastore. ")
                 # This is for BM2.5 on elastic search
                 if self.es_client.indices.exists(index=self.es_index_name):
                     self.es_client.indices.delete(index=self.es_index_name)
+                    logger.info(f"Truncated fulltext search datastore. ")
                 self.es_client.indices.create(index=self.es_index_name, mappings=self.es_mapping)
 
             except Exception as e:
@@ -86,11 +93,12 @@ class RAGProccesor:
                 collection = client.get_or_create_collection(name=collection_name)
             except Exception as e:
                 # Collection does not exist, create it
-                raise ValueError(f"Could not create vectordatabase collection:\n {str(e)}")
+                logger.error(f"Could not create vectordatabase collection:\n {str(e)}")
+                raise Exception(f"Could not create vectordatabase collection:\n {str(e)}")
 
         return collection
 
-    def write_es_index(self, chunks: List[str]) -> bool:
+    def write_es_index(self, chunks: List[str]):
         # Function to index documents
         try:
             actions = [
@@ -99,26 +107,27 @@ class RAGProccesor:
             bulk(self.es_client, actions)
             return True
         except Exception as e:
-            print(f"\n ElasticSearch Error processing with exception:/n {str(e)}")
-            return False
+            logger.error(f"\n ElasticSearch Error processing with exception:/n {str(e)}")
+            raise Exception(f"\n ElasticSearch Error processing with exception:/n {str(e)}")
 
     def search_es_index(self, query, top_k=3) -> List[Tuple[str, float]]:
         query_body = {"query": {"match": {"text": query}}}
         response = self.es_client.search(index=self.es_index_name, body=query_body, size=top_k)
         return [(hit["_source"]["text"], hit["_score"]) for hit in response["hits"]["hits"]]
 
-    def wrte_chunks(self, chunks: list[str], metas: list[dict], truncate: bool = False) -> bool:
+    def wrte_chunks(self, chunks: list[str], metas: list[dict], truncate: bool = False):
         try:
             collection = self.get_collection(truncate)
             ids = [str(i) for i in range(len(chunks))]
             embeddings = self.model.encode(chunks)
+            if len(embeddings) == 0:
+                raise Exception(f"\n VectorDB Error processing with empty embeddings")
             collection.add(ids=ids, embeddings=embeddings, documents=chunks, metadatas=metas)
             self.write_es_index(chunks)
-            print(f"Loaded {str(collection.count())} chunks into {self.rag_collection_name}")
-            return True
+            logger.info(f"Loaded {str(collection.count())} chunks into {self.rag_collection_name}")
         except Exception as e:
-            print(f"\n VectorDB Error processing with exception:/n {str(e)}")
-            return False
+            logger.error(f"\n VectorDB Error processing with exception:/n {str(e)}")
+            raise Exception(f"\n VectorDB Error processing with exception:/n {str(e)}")
 
     def query(self, question: str, answer: str = None, topK: int = 3) -> Dict[str, str]:
         try:
@@ -126,59 +135,84 @@ class RAGProccesor:
             collection = self.get_collection()
 
             # Perform the query using the vector database
-            results = collection.query(query_embeddings=self.model.encode([question]), n_results=topK)
+            results = collection.query(
+                query_embeddings=self.model.encode([question]), n_results=topK
+            )
 
             # Extract documents and summaries  and their embeddings
-            documents = results["documents"][0]
-            summaries = [result['summary'] for result in results['metadatas'][0] if 'summary' in result]
-            corpus_embeddings = self.model.encode(summaries, convert_to_tensor=True)
+            vector_documents = results["documents"][0]
+            vector_summaries = [
+                result["summary"] for result in results["metadatas"][0] if "summary" in result
+            ]
+            corpus_embeddings = self.model.encode(vector_summaries, convert_to_tensor=True)
 
             # Encode the query to a vector
             query_embedding = self.model.encode([question], convert_to_tensor=True)
 
             # Compute cosine similarity scores
-            cosine_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0].numpy()
+            vector_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0].numpy()
 
             # Perform BM25 search using Elasticsearch
             bm25_results = self.search_es_index(question)
 
             # Extract document texts and BM25 scores
-            documents_bm25, bm25_scores_list = zip(*bm25_results)
+            bm25_documents, bm25_scores_list = zip(*bm25_results)
             bm25_scores = np.array(bm25_scores_list)
 
             # Normalize BM25 and cosine similarity scores
             bm25_scores_normalized = (
                 bm25_scores / np.max(bm25_scores) if np.max(bm25_scores) > 0 else bm25_scores
             )
-            cosine_scores_normalized = (
-                cosine_scores / np.max(cosine_scores)
-                if np.max(cosine_scores) > 0
-                else cosine_scores
+            vector_scores_normalized = (
+                vector_scores / np.max(vector_scores)
+                if np.max(vector_scores) > 0
+                else vector_scores
             )
 
             # Combine BM25 and cosine similarity scores using a weighted approach
             alpha = 0.5  # Weight for BM25, (1 - alpha) for dense search
-            hybrid_scores = alpha * bm25_scores_normalized + (1 - alpha) * cosine_scores_normalized
+            hybrid_scores = alpha * bm25_scores_normalized + (1 - alpha) * vector_scores_normalized
 
             # Rank results based on hybrid scores
-            ranked_results = sorted(zip(documents, hybrid_scores), key=lambda x: x[1], reverse=True)
-
-            # Extract the top result
-            top_results = ranked_results[topK]
-
-            # Print the question and the top result
-            print(
-                f"Question: {question}; Answer: {top_results[0][0]} (Hybrid Score: {top_results[0][1]:.4f})"
+            top_results = sorted(
+                zip(vector_summaries, vector_documents, bm25_documents, hybrid_scores),
+                key=lambda x: x[3],
+                reverse=True,
             )
 
+            # Debugging Print the question and the top result
+            # logger.info(f"Question: {question}; Answer: {answer} (Hybrid Score: {top_results[0][3]:.4f})")
+
             # Return the top result as a dictionary
-            # @TODO Fetch Context And then push to LLM to generate better answer
-            return {
-                "question": question,
-                "answer": top_results[0][0],
-                "hybrid_score": str(top_results[0][1]),
-            }
+            """
+            ## Format the prompt with summary and text
+            ## Given input question and answer pair ##
+            Question: {question}
+            Current Answer: {answer}
+            
+            ## Reference Content Summary ##
+            {chunk_summary}
+
+            ## Reference Content Detail ##
+            {chunk_text}
+            """
+            rag_question = str(question).strip()
+            rag_answer = str(answer).strip()
+            rag_content_summary = str(top_results[0][0]).strip()
+            rag_content_detail = (
+                str(top_results[0][1]).strip() + " \n " + str(top_results[0][2]).strip()
+            )
+
+            qa_enrichment_prompt_template = get_prompt(self.config, "qa_enrichment")
+            qa_enrichment_prompt = qa_enrichment_prompt_template.format(
+                question=rag_question,
+                answer=rag_answer,
+                chunk_summary=rag_content_summary,
+                chunk_text=rag_content_detail,
+            ).strip()
+            messages = [{"role": "system", "content": qa_enrichment_prompt}]
+            return messages
 
         except Exception as e:
-            print(f"Error processing with exception:\n {str(e)}")
-            return {"error": str(e)}
+            logger.error(f"Error processing with exception:\n {str(e)}")
+            raise Exception(f"Failed to process qa pair refinement: {str(e)}")
