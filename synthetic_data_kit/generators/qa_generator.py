@@ -105,6 +105,8 @@ class QAGenerator:
     def refine_qa_pairs(self, qa_pairs: List[Dict[str, str]]) -> List[Dict[str, str]]:
 
         enable_rag = self.rag_config.get("enable_rag", False)
+        final_results: List[Dict[str, str]] = qa_pairs
+
         """
         @TODO
         Update this to batch mode to speed up QA refinement
@@ -112,24 +114,55 @@ class QAGenerator:
         if enable_rag == True:
             ragClient = RAGProccesor(self.client, self.config_path)
             results: List[Dict[str, str]] = []
+            prompt_message_list: List[List[Dict[str, str]]] = []
+
+            # loop through the qa pair to genereate prompt message
             for index, qa_pair in enumerate(qa_pairs):
-                logger.info(f"Processing QA Refinement for the {index} / {len(qa_pairs)}")
+                logger.info(
+                    f"Processing QA Refinement, stage 1 content enrichment for the {index+1} / {len(qa_pairs)}"
+                )
                 try:
                     question = qa_pair.get("question", "")
                     answer = qa_pair.get("answer", "")
                     if len(question) > 0 and len(answer) > 0:
-                        message = ragClient.query(question, answer)
-                        response = self.client.chat_completion(message, temperature=0.1)
-                        response_json = json.loads(response)
-                        if isinstance(response_json, list) and len(response_json) == 1:
-                            results.append(response_json[0])
-                        else:
-                            logger.error(f"Error return in qa refinement for response {response}")
+                        try:
+                            prompt_message = ragClient.query(question, answer)
+                            if prompt_message is None:
+                                raise Exception("ragClient.query returned None")
+                            if isinstance(prompt_message, List) and len(prompt_message) > 0:
+                                prompt_message_list.append(prompt_message)
+                        except Exception as e:
+                            raise Exception(
+                                f"Failed to process ragClient.query for qa pair: {question} / {answer}"
+                            )
                 except Exception as e:
                     logger.error(f"Exception occurred during QA refinement: {e}")
                     continue
-            return results
-        return qa_pairs
+
+            # process batch inference to generate refined QA pair
+            if len(prompt_message_list) > 0:
+                logger.info(
+                    f"Processing QA Refinement, stage 2 batch infernece with message size: {len(prompt_message_list)}"
+                )
+                retry_count = 0
+                max_retries = 3
+                while retry_count < max_retries:
+                    try:
+                        results = self.batch_inference(prompt_message_list, parse_qa_pairs)
+                        if len(results) > 0:
+                            final_results = results
+                            break
+                        else:
+                            raise Exception(f"Failed to process qa refinement")
+                    except Exception as e:
+                        print(f"Attempt {retry_count + 1} failed with error: {e}")
+                        retry_count += 1
+            else:
+                logger.error(
+                    f"Failed to process qa refinement after maximum retries in batch inference."
+                )
+
+        return final_results
 
     def generate_summary(self, document_text: str, fileName: str = None) -> str:
         """Generate a summary of the document"""
@@ -166,7 +199,7 @@ class QAGenerator:
                 logger.info(f"Messages: {all_messages}")
 
             # Get batch output for summaries of all chunks
-            summaries = self.batch_inference(all_messages, chunks, parse_summary)
+            summaries = self.batch_inference(all_messages, parse_summary)
 
             # Write chunks to rag for better QA pair generation
             self.write2rag(fileName, chunks, summaries, truncate=rag_truncate)
@@ -222,9 +255,9 @@ class QAGenerator:
         chunks = self.split_article_into_chunks(document_text)
         pairs_per_chunk = max(1, round(num_pairs / len(chunks)))
 
-        logger.info(f"Generating QA pairs...")
-        logger.info(f"Document split into {len(chunks)} chunks")
-        logger.info(f"With {pairs_per_chunk} QA pairs in a chunk")
+        logger.info(
+            f"Generating QA pairs, document split into {len(chunks)} chunks, with {pairs_per_chunk} QA pairs in a chunk"
+        )
 
         # Get QA generation prompt template
         qa_prompt_template = get_prompt(self.config, "qa_generation")
@@ -244,7 +277,7 @@ class QAGenerator:
             f"Processing {len(chunks)} chunks to generate {pairs_per_chunk} QA pairs per chunk..."
         )
 
-        result = self.batch_inference(all_messages, chunks, parse_qa_pairs)
+        result = self.batch_inference(all_messages, parse_qa_pairs)
         logger.info(f"QA Generation: {len(result)} outputs in total.")
 
         ## Update QA Pair with RAG
@@ -254,9 +287,7 @@ class QAGenerator:
 
         return result
 
-    def batch_inference(
-        self, all_messages: str, chunks: List[str], taskFunc
-    ) -> List[Dict[str, str]]:
+    def batch_inference(self, all_messages: List[List[Dict[str, str]]], taskFunc) -> List[Dict[str, str]]:
         """Inference using batched processing"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
         temperature = self.generation_config.get("temperature", 0.7)
@@ -281,7 +312,7 @@ class QAGenerator:
 
             progress_ctx = Progress(*progress_columns)
             generate_task = progress_ctx.add_task(
-                f"Generating batch inference output", total=len(chunks)
+                f"Generating batch inference output", total=len(all_messages)
             )
             progress_ctx.start()
         else:
@@ -290,13 +321,13 @@ class QAGenerator:
 
         all_inference_outputs = []
         # Process in batches
-        for batch_start in range(0, len(chunks), batch_size):
-            batch_end = min(batch_start + batch_size, len(chunks))
+        for batch_start in range(0, len(all_messages), batch_size):
+            batch_end = min(batch_start + batch_size, len(all_messages))
             batch_messages = all_messages[batch_start:batch_end]
             current_batch_size = len(batch_messages)
 
             batch_num = batch_start // batch_size + 1
-            total_batches = (len(chunks) + batch_size - 1) // batch_size
+            total_batches = (len(all_messages) + batch_size - 1) // batch_size
 
             # Simple progress indicator for non-verbose mode
             logger.info(
@@ -308,6 +339,14 @@ class QAGenerator:
                 batch_responses = self.client.batch_completion(
                     batch_messages, temperature=temperature, batch_size=batch_size
                 )
+
+                if len(batch_responses) == 0:
+                    logger.error(
+                        f"Error processing batch with empty response in batch inference with parser: {taskFunc.__name__}"
+                    )
+                    raise Exception(
+                        f"Error processing batch with empty response in batch inference with parser: {taskFunc.__name__}"
+                    )
 
                 # Process each response in the batch
                 for j, response in enumerate(batch_responses):
@@ -330,8 +369,9 @@ class QAGenerator:
                     progress_ctx.update(generate_task, advance=current_batch_size)
 
             except Exception as e:
-                if verbose:
-                    logger.error(f"  Error processing batch {batch_num}: {str(e)}")
+                logger.error(
+                    f"error in batch inference with parser: {taskFunc.__name__}, with exception {e}"
+                )
 
                 # Update progress bar if in verbose mode
                 if progress_ctx and generate_task:
@@ -340,10 +380,6 @@ class QAGenerator:
         # Stop progress bar if in verbose mode
         if progress_ctx:
             progress_ctx.stop()
-
-        # Clear the progress line in non-verbose mode
-        if not verbose:
-            logger.info("Batch processing complete.")
 
         # Always print summary information, even in non-verbose mode
         logger.info(

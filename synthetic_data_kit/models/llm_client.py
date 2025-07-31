@@ -458,7 +458,10 @@ class LLMClient:
             logger.error("Exceeded maximum retries. Returning the last available output.")
             raise Exception("Exceeded maximum retries. Failed to get proper output.")
 
-        return [s.strip() for s in llm_output]
+        # List comprehension with None check
+        cleaned_output = [s.strip() for s in llm_output if s is not None]
+
+        return cleaned_output
 
     async def _process_message_async(
         self,
