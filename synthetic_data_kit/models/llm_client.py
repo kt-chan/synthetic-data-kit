@@ -12,13 +12,18 @@ import os
 import logging
 import asyncio
 from pathlib import Path
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from synthetic_data_kit.utils.config import (
     load_config,
     get_vllm_config,
     get_openai_config,
     get_llm_provider,
 )
+
+# For Batch Inference Concurrency
+import threading
+import requests
+from requests.adapters import HTTPAdapter, Retry
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -107,8 +112,12 @@ class LLMClient:
             # Set parameters, with CLI overrides taking precedence
             self.api_base = api_base or vllm_config.get("api_base")
             self.model = model_name or vllm_config.get("model")
-            self.max_retries = max_retries or vllm_config.get("max_retries")
+            self.connections = vllm_config.get("connections", 5)
+            self.threads = vllm_config.get("threads", 8)
+            self.max_retries = max_retries or vllm_config.get("max_retries", 3)
             self.retry_delay = retry_delay or vllm_config.get("retry_delay")
+            # Thread-local storage for session objects (class-level, not instance-level)
+            self._thread_local = threading.local()
 
             # No client to initialize for vLLM as we use requests directly
             # Verify server is running
@@ -437,14 +446,18 @@ class LLMClient:
         max_retries = 3
 
         while retry_count < max_retries:
-            if self.provider == "api-endpoint":
-                llm_output = self._openai_batch_completion(
-                    message_batches, temperature, max_tokens, top_p, batch_size, verbose
-                )
-            else:  # Default to vLLM
-                llm_output = self._vllm_batch_completion(
-                    message_batches, temperature, max_tokens, top_p, batch_size, verbose
-                )
+            try:
+                if self.provider == "api-endpoint":
+                    llm_output = self._openai_batch_completion(
+                        message_batches, temperature, max_tokens, top_p, batch_size, verbose
+                    )
+                else:  # Default to vLLM
+                    llm_output = self._vllm_batch_completion(
+                        message_batches, temperature, max_tokens, top_p, batch_size, verbose
+                    )
+            finally:
+                # Clean up resources
+                self.cleanup()
 
             # Check if the output is proper. You need to define what "proper" means for your case.
             if llm_output and len(llm_output) > 0:  # Example condition to check if output is proper
@@ -703,6 +716,141 @@ class LLMClient:
 
         return results
 
+    # def _vllm_batch_completion(
+    #     self,
+    #     message_batches: List[List[Dict[str, str]]],
+    #     temperature: float,
+    #     max_tokens: int,
+    #     top_p: float,
+    #     batch_size: int,
+    #     verbose: bool,
+    # ) -> List[str]:
+    #     """Process multiple message sets in parallel batches using vLLM's API"""
+    #     results = []
+
+    #     # Process message batches in chunks
+    #     for i in range(0, len(message_batches), batch_size):
+    #         batch_chunk = message_batches[i : i + batch_size]
+    #         if verbose:
+    #             logger.info(
+    #                 f"Processing batch {i//batch_size + 1}/{(len(message_batches) + batch_size - 1) // batch_size} with {len(batch_chunk)} requests"
+    #             )
+
+    #         # Prepare batch requests
+    #         batch_requests = [
+    #             {
+    #                 "model": self.model,
+    #                 "messages": messages,
+    #                 "temperature": temperature,
+    #                 "max_tokens": max_tokens,
+    #                 "top_p": top_p,
+    #             }
+    #             for messages in batch_chunk
+    #         ]
+
+    #         try:
+    #             # Define request processing function
+    #             def process_request(request_data):
+    #                 if verbose:
+    #                     logger.info(f"Sending request to vLLM model {self.model}...")
+    #                 response = requests.post(
+    #                     f"{self.api_base}/chat/completions",
+    #                     headers={"Content-Type": "application/json"},
+    #                     data=json.dumps(request_data),
+    #                     timeout=180,
+    #                 )
+    #                 if verbose:
+    #                     logger.info(f"Received status {response.status_code}")
+    #                 response.raise_for_status()
+    #                 return response.json()["choices"][0]["message"]["content"]
+
+    #             # Process batch in parallel using thread pool
+    #             batch_results = [None] * len(batch_requests)
+    #             with ThreadPoolExecutor(max_workers=min(20, len(batch_requests))) as executor:
+    #                 future_to_index = {
+    #                     executor.submit(process_request, req): idx
+    #                     for idx, req in enumerate(batch_requests)
+    #                 }
+    #                 for future in as_completed(future_to_index):
+    #                     idx = future_to_index[future]
+    #                     try:
+    #                         batch_results[idx] = future.result()
+    #                     except Exception as e:
+    #                         raise RuntimeError(f"Request failed: {str(e)}")
+
+    #             results.extend(batch_results)
+
+    #         except Exception as e:
+    #             raise Exception(f"Failed to process vLLM batch: {str(e)}")
+
+    #         # Inter-batch delay
+    #         if i + batch_size < len(message_batches):
+    #             time.sleep(0.1)
+
+    #     return results
+
+    def get_session(self) -> requests.Session:
+        """Get thread-local session with connection pooling"""
+        if not hasattr(self._thread_local, "session"):
+            session = requests.Session()
+
+            # Configure retry strategy
+            retry_strategy = Retry(
+                total=self.max_retries,
+                backoff_factor=0.5,
+                status_forcelist=[500, 502, 503, 504],
+                allowed_methods=["POST"],
+            )
+
+            # Configure adapter with optimized pooling
+            adapter = HTTPAdapter(
+                pool_connections=self.connections,  # Number of connection pools
+                pool_maxsize=self.threads,  # Max connections per pool
+                max_retries=retry_strategy,
+            )
+
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+            self._thread_local.session = session
+
+        return self._thread_local.session
+
+    def close_sessions(self):
+        """Clean up all sessions in the current thread"""
+        if hasattr(self._thread_local, "session"):
+            try:
+                self._thread_local.session.close()
+            except Exception as e:
+                logger.debug(f"Error closing session: {str(e)}")
+            finally:
+                del self._thread_local.session
+
+    def _send_vllm_request(self, request_data: dict, verbose: bool) -> str:
+        """Send request with connection pooling and error handling"""
+        session = self.get_session()
+        try:
+            if verbose:
+                logger.info(f"Sending request to vLLM model {self.model}...")
+
+            response = session.post(
+                f"{self.api_base}/chat/completions", json=request_data, timeout=60
+            )
+
+            if verbose:
+                logger.info(f"Received status {response.status_code}")
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Request failed: {str(e)}")
+            # Refresh session on connection errors
+            self.close_sessions()
+            raise ConnectionError(f"Request failed after retries: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            raise RuntimeError(f"Processing error: {str(e)}")
+
     def _vllm_batch_completion(
         self,
         message_batches: List[List[Dict[str, str]]],
@@ -712,21 +860,25 @@ class LLMClient:
         batch_size: int,
         verbose: bool,
     ) -> List[str]:
-        """Process multiple message sets in batches using vLLM's API"""
+        """Process batches with optimized threading and connection pooling"""
         results = []
+        total_batches = len(message_batches)
 
-        # Process message batches in chunks to avoid overloading the server
-        for i in range(0, len(message_batches), batch_size):
-            batch_chunk = message_batches[i : i + batch_size]
-            if verbose:
-                logger.info(
-                    f"Processing batch {i//batch_size + 1}/{(len(message_batches) + batch_size - 1) // batch_size} with {len(batch_chunk)} requests"
-                )
+        # Use single executor for all batches
+        with ThreadPoolExecutor(max_workers=min(batch_size, self.connections)) as executor:
+            for batch_idx in range(0, total_batches, batch_size):
+                batch_chunk = message_batches[batch_idx : batch_idx + batch_size]
+                current_batch = batch_idx // batch_size + 1
+                total_batch_count = (total_batches + batch_size - 1) // batch_size
 
-            # Create batch request payload for VLLM
-            batch_requests = []
-            for messages in batch_chunk:
-                batch_requests.append(
+                if verbose:
+                    logger.info(
+                        f"Processing batch {current_batch}/{total_batch_count} "
+                        f"with {len(batch_chunk)} requests"
+                    )
+
+                # Prepare batch requests
+                batch_requests = [
                     {
                         "model": self.model,
                         "messages": messages,
@@ -734,40 +886,46 @@ class LLMClient:
                         "max_tokens": max_tokens,
                         "top_p": top_p,
                     }
-                )
+                    for messages in batch_chunk
+                ]
 
-            try:
-                # For now, we run these in parallel with multiple requests
-                batch_results = []
-                for request_data in batch_requests:
-                    # Only print if verbose mode is enabled
-                    if verbose:
-                        logger.info(f"Sending batch request to vLLM model {self.model}...")
+                try:
+                    # Submit all requests in current batch
+                    future_to_index = {}
+                    for idx, req in enumerate(batch_requests):
+                        future = executor.submit(self._send_vllm_request, req, verbose)
+                        future_to_index[future] = idx
 
-                    response = requests.post(
-                        f"{self.api_base}/chat/completions",
-                        headers={"Content-Type": "application/json"},
-                        data=json.dumps(request_data),
-                        timeout=180,  # Increased timeout for batch processing
-                    )
+                    # Collect results as they complete
+                    batch_results = [None] * len(batch_requests)
+                    for future in as_completed(future_to_index):
+                        idx = future_to_index[future]
+                        try:
+                            batch_results[idx] = future.result()
+                        except Exception as e:
+                            logger.error(f"Request failed: {str(e)}")
+                            batch_results[idx] = f"Error: {str(e)}"
 
-                    if verbose:
-                        logger.info(f"Received response with status code: {response.status_code}")
+                    results.extend(batch_results)
 
-                    response.raise_for_status()
-                    content = response.json()["choices"][0]["message"]["content"]
-                    batch_results.append(content)
+                except Exception as e:
+                    logger.exception(f"Batch processing failed: {str(e)}")
+                    # Fallback to sequential processing
+                    for req in batch_requests:
+                        try:
+                            results.append(self._send_vllm_request(req, verbose))
+                        except Exception as fallback_e:
+                            results.append(f"Error: {str(fallback_e)}")
 
-                results.extend(batch_results)
-
-            except (requests.exceptions.RequestException, KeyError, IndexError) as e:
-                raise Exception(f"Failed to process vLLM batch: {str(e)}")
-
-            # Small delay between batches
-            if i + batch_size < len(message_batches):
-                time.sleep(0.1)
+                # Inter-batch delay to prevent server overload
+                if batch_idx + batch_size < total_batches:
+                    time.sleep(0.1)
 
         return results
+
+    def cleanup(self):
+        """Clean up all resources (call when done with client)"""
+        self.close_sessions()
 
     @classmethod
     def from_config(cls, config_path: Path) -> "LLMClient":

@@ -1,13 +1,8 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the terms described in the LICENSE file in
-# the root directory of this source tree.
-# Output utilities
 import os
 import chromadb
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
@@ -55,6 +50,9 @@ class RAGProccesor:
         self.es_user = get_rag_config(self.config).get("es_user", None)
         self.es_password = get_rag_config(self.config).get("es_password", None)
         self.es_mapping = {"properties": {"text": {"type": "text"}}}
+        self.connections = get_rag_config(self.config).get("connections", 4)
+        self.threads = get_rag_config(self.config).get("threads", 4)
+        self.retries = get_rag_config(self.config).get("max_retries", 3)
         self.es_client = Elasticsearch(
             hosts=[{"host": self.es_host, "port": self.es_port, "scheme": "http"}],
             http_auth=(
@@ -129,24 +127,21 @@ class RAGProccesor:
             logger.error(f"\n VectorDB Error processing with exception:/n {str(e)}")
             raise Exception(f"\n VectorDB Error processing with exception:/n {str(e)}")
 
-    def query(self, question: str, answer: str = None, topK: int = 3) -> List[Dict[str, str]]:
-        max_retries = 3
+    def _process_single_qa(self, qa_pair: Dict[str, str], topK: int) -> List[Dict[str, str]]:
+        """Process a single QA pair with retries and return enriched message"""
+        question = qa_pair["question"]
+        answer = qa_pair["answer"]
         retry_count = 0
-        top_results = None
-        message = None
+        message:List[Dict[str, str]] = None
 
-        # Query Retries
-        while retry_count < max_retries and top_results is None:
+        while retry_count < self.retries and message is None:
             try:
-                # Get the collection
                 collection = self.get_collection()
-
-                # Perform the query using the vector database
                 results = collection.query(
                     query_embeddings=self.model.encode([question]), n_results=topK
                 )
 
-                # Extract documents and summaries  and their embeddings
+                # Extract documents and summaries and their embeddings
                 vector_documents = results["documents"][0]
                 vector_summaries = [
                     result["summary"] for result in results["metadatas"][0] if "summary" in result
@@ -160,7 +155,7 @@ class RAGProccesor:
                 vector_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0].numpy()
 
                 # Perform BM25 search using Elasticsearch
-                bm25_results = self.search_es_index(question)
+                bm25_results = self.search_es_index(question, topK)
 
                 # Extract document texts and BM25 scores
                 bm25_documents, bm25_scores_list = zip(*bm25_results)
@@ -176,6 +171,11 @@ class RAGProccesor:
                     else vector_scores
                 )
 
+                # Ensure both normalized arrays have the same length
+                min_length = min(len(bm25_scores_normalized), len(vector_scores_normalized))
+                bm25_scores_normalized = bm25_scores_normalized[:min_length]
+                vector_scores_normalized = vector_scores_normalized[:min_length]
+
                 # Combine BM25 and cosine similarity scores using a weighted approach
                 alpha = 0.5  # Weight for BM25, (1 - alpha) for dense search
                 hybrid_scores = (
@@ -189,22 +189,6 @@ class RAGProccesor:
                     reverse=True,
                 )
 
-                # Debugging Print the question and the top result
-                # logger.info(f"Question: {question}; Answer: {answer} (Hybrid Score: {top_results[0][3]:.4f})")
-
-                # Return the top result as a dictionary
-                """
-                ## Format the prompt with summary and text
-                ## Given input question and answer pair ##
-                Question: {question}
-                Current Answer: {answer}
-                
-                ## Reference Content Summary ##
-                {chunk_summary}
-
-                ## Reference Content Detail ##
-                {chunk_text}
-                """
                 if top_results and len(top_results) > 0:
                     rag_question = str(question).strip()
                     rag_answer = str(answer).strip()
@@ -220,21 +204,42 @@ class RAGProccesor:
                         chunk_summary=rag_content_summary,
                         chunk_text=rag_content_detail,
                     ).strip()
-                    message = {"role": "system", "content": qa_enrichment_prompt}
-                    break
+                    message = [{"role": "system", "content": qa_enrichment_prompt}]
+                    break  # Success, break retry loop
                 else:
-                    raise Exception(
-                        f"Error processing on qa enrichment query, retry {retry_count}/{max_retries}"
-                    )
+                    raise Exception("No results found for query")
+
             except Exception as e:
                 retry_count += 1
-                logger.error(f"Error processing with exception:\n {str(e)}")
+                if retry_count >= self.retries:
+                    logger.error(
+                        f"Failed to process QA pair after {self.retries} retries: {question} / {answer}"
+                    )
+                    raise Exception(
+                        f"Failed to process ragClient.query after maximum retries for qa pair: {question} / {answer}"
+                    )
+                else:
+                    logger.warning(
+                        f"Retry {retry_count}/{self.retries} for QA pair due to error: {str(e)}"
+                    )
 
-        if message is None or retry_count == max_retries:
-            logger.error(f"Failed to process ragClient.query after maximum retries for qa pair: {question} / {answer}")
-            raise Exception(
-                f"Failed to process ragClient.query after maximum retries for qa pair: {question} / {answer}"
-            )
-        output_list:List[Dict[str,str]] = []
-        output_list.append(message)
+        return message
+
+    def query(self, qa_pairs: List[Dict[str, str]], topK: int = 3) -> List[List[Dict[str, str]]]:
+        """Process QA pairs concurrently using thread pool"""
+        output_list:List[List[Dict[str, str]]] = []
+        with ThreadPoolExecutor(max_workers=min(self.connections, len(qa_pairs))) as executor:
+            futures = {executor.submit(self._process_single_qa, qa, topK): qa for qa in qa_pairs}
+
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    output_list.append(result)
+                except Exception as e:
+                    # Cancel all pending futures on first error
+                    for f in futures:
+                        f.cancel()
+                    logger.error(f"Processing failed: {str(e)}")
+                    raise  # Re-raise exception to stop entire process
+
         return output_list

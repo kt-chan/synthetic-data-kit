@@ -107,48 +107,34 @@ class QAGenerator:
         enable_rag = self.rag_config.get("enable_rag", False)
         final_results: List[Dict[str, str]] = qa_pairs
 
-        """
-        @TODO
-        Update this to batch mode to speed up QA refinement
-        """
+        if qa_pairs is None or len(qa_pairs) == 0: 
+            raise Exception(f"Failed to process qa refinement, empty qa pairs")
+
         if enable_rag == True:
             ragClient = RAGProccesor(self.client, self.config_path)
             results: List[Dict[str, str]] = []
-            prompt_message_list: List[List[Dict[str, str]]] = []
+            prompt_messages: List[List[Dict[str, str]]] = []
 
-            # loop through the qa pair to genereate prompt message
-            for index, qa_pair in enumerate(qa_pairs):
-                logger.info(
-                    f"Processing QA Refinement, stage 1 content enrichment for the {index+1} / {len(qa_pairs)}"
-                )
-                try:
-                    question = qa_pair.get("question", "")
-                    answer = qa_pair.get("answer", "")
-                    if len(question) > 0 and len(answer) > 0:
-                        try:
-                            prompt_message = ragClient.query(question, answer)
-                            if prompt_message is None:
-                                raise Exception("ragClient.query returned None")
-                            if isinstance(prompt_message, List) and len(prompt_message) > 0:
-                                prompt_message_list.append(prompt_message)
-                        except Exception as e:
-                            raise Exception(
-                                f"Failed to process ragClient.query for qa pair: {question} / {answer}"
-                            )
-                except Exception as e:
-                    logger.error(f"Exception occurred during QA refinement: {e}")
-                    continue
+            logger.info(f"Processing QA Refinement, stage 1 content enrichment, with {len(qa_pairs)} QA pairs")
+
+            try:
+                prompt_messages = ragClient.query(qa_pairs)
+                if prompt_messages is None:
+                    raise Exception("ragClient.query returned None")
+            except Exception as e:
+                logger.error(f"Exception occurred during QA refinement: {e}")
+                raise Exception(f"Exception occurred during QA refinement: {e}")
 
             # process batch inference to generate refined QA pair
-            if len(prompt_message_list) > 0:
+            if len(prompt_messages) > 0:
                 logger.info(
-                    f"Processing QA Refinement, stage 2 batch infernece with message size: {len(prompt_message_list)}"
+                    f"Processing QA Refinement, stage 2 batch infernece with message size: {len(prompt_messages)}"
                 )
                 retry_count = 0
                 max_retries = 3
                 while retry_count < max_retries:
                     try:
-                        results = self.batch_inference(prompt_message_list, parse_qa_pairs)
+                        results = self.batch_inference(prompt_messages, parse_qa_pairs)
                         if len(results) > 0:
                             final_results = results
                             break
@@ -287,7 +273,9 @@ class QAGenerator:
 
         return result
 
-    def batch_inference(self, all_messages: List[List[Dict[str, str]]], taskFunc) -> List[Dict[str, str]]:
+    def batch_inference(
+        self, all_messages: List[List[Dict[str, str]]], taskFunc
+    ) -> List[Dict[str, str]]:
         """Inference using batched processing"""
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
         temperature = self.generation_config.get("temperature", 0.7)
