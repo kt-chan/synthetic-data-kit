@@ -113,9 +113,9 @@ class RAGProccesor:
         response = self.es_client.search(index=self.es_index_name, body=query_body, size=top_k)
         return [(hit["_source"]["text"], hit["_score"]) for hit in response["hits"]["hits"]]
 
-    def wrte_chunks(self, chunks: list[str], metas: list[dict], truncate: bool = False):
+    def wrte_chunks(self, chunks: list[str], metas: list[dict]):
         try:
-            collection = self.get_collection(truncate)
+            collection = self.get_collection()
             ids = [str(i) for i in range(len(chunks))]
             embeddings = self.model.encode(chunks)
             if len(embeddings) == 0:

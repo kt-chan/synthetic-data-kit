@@ -112,7 +112,7 @@ class LLMClient:
             # Set parameters, with CLI overrides taking precedence
             self.api_base = api_base or vllm_config.get("api_base")
             self.model = model_name or vllm_config.get("model")
-            self.connections = vllm_config.get("connections", 5)
+            self.connections = vllm_config.get("connections", 1)
             self.threads = vllm_config.get("threads", 8)
             self.max_retries = max_retries or vllm_config.get("max_retries", 3)
             self.retry_delay = retry_delay or vllm_config.get("retry_delay")
