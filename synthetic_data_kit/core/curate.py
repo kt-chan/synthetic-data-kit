@@ -11,9 +11,14 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from synthetic_data_kit.models.llm_client import LLMClient
-from synthetic_data_kit.utils.rag_processor import RAGProccesor
-from synthetic_data_kit.utils.config import get_curate_config, get_prompt
+from synthetic_data_kit.generators.qa_curator import QACurator
+from synthetic_data_kit.utils.config import get_curate_config, get_prompt, get_rag_config
 from synthetic_data_kit.utils.llm_processing import convert_to_conversation_format, parse_ratings
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def curate_qa_pairs(
@@ -55,7 +60,7 @@ def curate_qa_pairs(
     summary = data.get("summary", "")
 
     # If there are no QA pairs or they're already filtered
-    if not qa_pairs:
+    if not qa_pairs or len(qa_pairs) == 0:
         raise ValueError("No QA pairs found in the input file")
 
     # Initialize LLM client
@@ -63,30 +68,17 @@ def curate_qa_pairs(
         config_path=config_path, provider=provider, api_base=api_base, model_name=model
     )
 
-    # Get threshold from args, then config, then default
-    if threshold is None:
-        config = client.config
-        cleanup_config = get_curate_config(config)
-        threshold = cleanup_config.get("threshold", 7.0)
+    # Initialize QA Curator
+    qaCuratorClient = QACurator(client, config_path)
 
     # Get configuration
     curate_config = get_curate_config(client.config)
+    rag_config = get_rag_config(client.config)
+    enable_rag = rag_config.get("enable_rag", False)
 
-    # Allow environment variable to override batch size (for debugging)
-    env_batch_size = os.environ.get("SDK_BATCH_SIZE")
-    if env_batch_size and env_batch_size.isdigit():
-        batch_size = int(env_batch_size)
-        inference_batch = int(env_batch_size)
-        if verbose:
-            print(f"Using environment-specified batch size: {batch_size}")
-    else:
-        batch_size = curate_config.get("batch_size", 32)
-        inference_batch = curate_config.get("inference_batch", 32)
-
-    rating_temperature = curate_config.get("temperature", 0.1)
-
-    if threshold is None:
-        threshold = curate_config.get("threshold", 7.0)
+    batch_size = curate_config.get("batch_size", 32)
+    inference_batch = curate_config.get("inference_batch", 32)
+    threshold = curate_config.get("threshold", 7.0) if threshold is None else threshold
 
     # Get rating prompt template
     rating_prompt_template = get_prompt(client.config, "qa_rating")
@@ -94,30 +86,41 @@ def curate_qa_pairs(
     # Split QA pairs into batches
     batches = []
     for i in range(0, len(qa_pairs), batch_size):
-        batch = qa_pairs[i : i + batch_size]
-        batches.append(batch)
+        try:
+            batch = qa_pairs[i : i + batch_size]
+            if isinstance(batch, list) and len(batch) > 1:
+                if batch[0]["question"] is not None and batch[0]["answer"] is not None:
+                    batches.extend(batch)
+            if isinstance(batch, dict):
+                if batch["question"] is not None and batch["answer"] is not None:
+                    batches.append([batch])
+        except Exception as e:
+            logger.error(f"Parsing Error for {e}")
+            pass
 
     # Prepare all message batches for rating
-    # @TODO RAG Checking, 
-    # 1. add RAG for context checking
-    # 2. add Graph Building logics
-
-    # Create QA generator
-    ragProccesor = RAGProccesor(client, config_path)
-
     all_messages = []
+
+    # Enrich with RAG Content
+    if enable_rag:
+        response = qaCuratorClient.enrich(batches)
+        if response is not None and len(response) > 0:
+            batches = response
+        else:
+            logger.error(f"Error in enriching QA Content for {batches}")
+
     for batch in batches:
-        batch_json = json.dumps(batch, indent=2)
-        rating_prompt = rating_prompt_template.format(pairs=batch_json)
+        rating_prompt = rating_prompt_template.format(
+            question=batch["question"],
+            answer=batch["answer"],
+            content=batch.get("content", "There is no reference context exist."),
+        ).strip()
         messages = [{"role": "system", "content": rating_prompt}]
         all_messages.append(messages)
 
     # Initialize counters and result containers
-    filtered_pairs = []
-    unfiltered_pairs = []
-    total_score = 0
-    total_evaluated = 0
-    total_passed = 0
+    total_filtered_pairs = []
+    total_unfiltered_pairs = []
 
     # Process batches with simple progress indicator rather than a detailed bar
     # This avoids conflicts with other output messages
@@ -148,6 +151,8 @@ def curate_qa_pairs(
         progress_ctx = None
         rate_task = None
 
+    logger.info(f"Curating total {len(batches)} qa-pairs...")
+
     # Process in inference batches
     for batch_start in range(0, len(all_messages), inference_batch):
         batch_end = min(batch_start + inference_batch, len(all_messages))
@@ -156,114 +161,22 @@ def curate_qa_pairs(
 
         batch_num = batch_start // inference_batch + 1
         total_batches = (len(all_messages) + inference_batch - 1) // inference_batch
-
         # Simple progress indicator for non-verbose mode
-        if not verbose:
-            print(f"Processing batch {batch_num}/{total_batches}...", end="\r")
-        else:
-            print(f"Processing batch {batch_num}/{total_batches}")
+        logger.info(
+            f"Curating batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
+        )
 
         try:
-            # Get ratings for the batch
-            if verbose:
-                print(f"Sending batch request with {len(current_batch)} items")
 
-            batch_responses = client.batch_completion(
-                current_batch, temperature=rating_temperature, batch_size=inference_batch
+            filtered_pairs, unfiltered_pairs = qaCuratorClient.curate(
+                messages=current_batch, batches=batches, batch_start=batch_start
             )
 
-            if verbose:
-                print(f"Received {len(batch_responses)} responses")
-                for i, resp in enumerate(batch_responses):
-                    print(f"Response {i+1}: {resp[:1000]}...")
+            if filtered_pairs is not None and len(filtered_pairs) > 0:
+                total_filtered_pairs.extend(filtered_pairs)
 
-            # Process each response
-            for j, response in enumerate(batch_responses):
-                original_batch_index = batch_start + j
-                if original_batch_index < len(batches):
-                    original_batch = batches[original_batch_index]
-
-                    # Parse the ratings with original batch for fallback
-                    try:
-                        if verbose:
-                            print(f"Processing response {original_batch_index+1}")
-
-                        rated_batch = parse_ratings(response, original_batch)
-                        all_valid = all(
-                            "question" in pair and "answer" in pair and "rating" in pair
-                            for pair in rated_batch
-                        )
-                        if all_valid:
-                            # Process the rated batch
-                            for pair in rated_batch:
-                                if "rating" in pair:
-                                    rating = pair["rating"]
-                                    total_score += rating
-                                    total_evaluated += 1
-
-                                    if rating >= threshold:
-                                        filtered_pairs.append(pair)
-                                        total_passed += 1
-                                    else:
-                                        unfiltered_pairs.append(pair)
-                        else:
-                            print(
-                                f"Error processing batch {original_batch_index+1}: {str(rated_batch)}"
-                            )
-                    except Exception as e:
-                        if verbose:
-                            print(f"Error processing batch {original_batch_index+1}: {str(e)}")
-                            print(f"First 100 chars of response: {response[:1000]}")
-
-                        # Try processing one pair at a time as a fallback
-                        try:
-                            if verbose:
-                                print("Attempting to process items individually...")
-
-                            for item in original_batch:
-                                item_json = json.dumps(item, indent=2)
-                                rating_prompt = rating_prompt_template.format(pairs=item_json)
-                                item_response = client.chat_completion(
-                                    [{"role": "system", "content": rating_prompt}],
-                                    temperature=rating_temperature,
-                                )
-                                try:
-                                    # This should be a single item
-                                    rated_item = parse_ratings(item_response, [item])
-                                    all_valid = all(
-                                        "question" in pair and "answer" in pair and "rating" in pair
-                                        for pair in rated_item
-                                    )
-                                    if all_valid:
-                                        if rated_item and len(rated_item) > 0:
-                                            pair = rated_item[0]
-                                            if "rating" in pair:
-                                                rating = pair["rating"]
-                                                total_score += rating
-                                                total_evaluated += 1
-
-                                                if rating >= threshold:
-                                                    filtered_pairs.append(pair)
-                                                    total_passed += 1
-                                                    if verbose:
-                                                        print(
-                                                            f"Successfully processed individual item with rating {rating}"
-                                                        )
-                                                else:
-                                                    unfiltered_pairs.append(pair)
-                                    else:
-                                        print(
-                                            f"Error processing batch {original_batch_index+1}: {str(rated_item)}"
-                                        )
-                                except Exception as inner_e:
-                                    if verbose:
-                                        print(f"Failed to process individual item: {str(inner_e)}")
-                        except Exception as fallback_e:
-                            if verbose:
-                                print(f"Fallback processing failed: {str(fallback_e)}")
-
-                        # Continue processing other batches rather than failing completely
-                        pass
+            if unfiltered_pairs is not None and len(unfiltered_pairs) > 0:
+                total_unfiltered_pairs.extend(unfiltered_pairs)
 
             # Update progress bar if in verbose mode
             if progress_ctx and rate_task:
@@ -271,7 +184,7 @@ def curate_qa_pairs(
 
         except Exception as e:
             if verbose:
-                print(f"Error processing inference batch {batch_num}: {str(e)}")
+                logger.error(f"Error processing inference batch {batch_num}: {str(e)}")
 
             # Update progress bar if in verbose mode
             if progress_ctx and rate_task:
@@ -283,31 +196,39 @@ def curate_qa_pairs(
 
     # Clear the progress line in non-verbose mode
     if not verbose:
-        print(" " * 80, end="\r")
-        print("Batch processing complete.")
+        logger.info("Batch processing complete.")
+
+    # Calculate Scores
+    total_score = 0
+    total_evaluated = len(total_filtered_pairs) + len(total_unfiltered_pairs)
+    total_passed = len(total_filtered_pairs)
+
+    for idx, score in enumerate(total_filtered_pairs):
+        if score["rating"] is not None and isinstance(score["rating"], int):
+            total_score += score["rating"]
 
     # Calculate metrics
     metrics = {
-        "total": len(qa_pairs),
-        "filtered": len(filtered_pairs),
-        "retention_rate": round(len(filtered_pairs) / len(qa_pairs), 2) if qa_pairs else 0,
+        "total": len(batches),
+        "filtered": len(total_filtered_pairs),
+        "retention_rate": round(len(total_filtered_pairs) / len(batches), 2) if batches else 0,
         "avg_score": round(total_score / total_evaluated, 1) if total_evaluated else 0,
     }
 
     # Always print basic stats, even in non-verbose mode
-    print(f"Rated {total_evaluated} QA pairs")
-    print(f"Retained {total_passed} pairs (threshold: {threshold})")
-    print(f"Average score: {metrics['avg_score']}")
+    logger.info(f"Rated {total_evaluated} QA pairs")
+    logger.info(f"Retained {total_passed} pairs (threshold: {threshold})")
+    logger.info(f"Average score: {metrics['avg_score']}")
 
     # Convert to conversation format
-    conversations = convert_to_conversation_format(filtered_pairs)
+    conversations = convert_to_conversation_format(total_filtered_pairs)
 
     # Create result with filtered pairs
     result = {
         "summary": summary,
-        "qa_pairs": filtered_pairs,
+        "qa_pairs": total_filtered_pairs,
         "conversations": conversations,
-        "bad_qa_pairs": unfiltered_pairs,
+        "bad_qa_pairs": total_unfiltered_pairs,
         "metrics": metrics,
     }
 

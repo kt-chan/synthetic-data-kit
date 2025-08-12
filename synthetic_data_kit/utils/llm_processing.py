@@ -14,63 +14,75 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def parse_summary(chunk_index: int, chunk: str) -> List[Dict[str, str]]:
     """Parse chunk summary from LLM output with enhanced error handling"""
-    verbose = os.environ.get('SDK_VERBOSE', 'false').lower() == 'true'
-    
+    verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
+
     if verbose:
         logger.info(f"Parsing response of length {len(chunk)}")
 
     if chunk and len(chunk) > 0:
-        cleaned_text = re.sub(r'(\n\s*|\r\s*)', ' ', chunk).strip()   # Remove newlines and extra spaces
-        cleaned_text = re.sub(r',(\s*\}|\s*\])', r'\1', cleaned_text).strip()  # Remove trailing commas
+        cleaned_text = re.sub(
+            r"(\n\s*|\r\s*)", " ", chunk
+        ).strip()  # Remove newlines and extra spaces
+        cleaned_text = re.sub(
+            r",(\s*\}|\s*\])", r"\1", cleaned_text
+        ).strip()  # Remove trailing commas
     return [{"id": chunk_index, "data": cleaned_text}]
 
 
 def parse_qa_pairs(chunk_index: int, text: str) -> List[Dict[str, str]]:
     """Parse QA pairs from LLM output with enhanced error handling"""
-    verbose = os.environ.get('SDK_VERBOSE', 'false').lower() == 'true'
-    
+    verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
+
     if verbose:
         logger.info(f"Parsing response of length {len(text)}")
-    
+
     try:
         # Try direct JSON parsing
-        if '[' in text :
+        if "[" in text:
             # Find the first [ and last ]
-            start = text.find('[')
-            end = text.rfind(']') 
-            
+            start = text.find("[")
+            end = text.rfind("]")
+
             # If there is no closing ], append it
             if end == -1:
-                end = text.rfind('},') 
-                json_text = text[start:end+1] + ']'
+                end = text.rfind("},")
+                json_text = text[start : end + 1] + "]"
             else:
-                json_text = text[start:end + 1]
+                json_text = text[start : end + 1]
 
             # Try to clean up the JSON to fix common issues
-            cleaned_text = re.sub(r'(\n\s*|\r\s*)', ' ', json_text)  # Remove newlines and extra spaces
-            cleaned_text = re.sub(r',(\s*\}|\s*\])', r'\1', cleaned_text)  # Remove trailing commas
-            
+            cleaned_text = re.sub(
+                r"(\n\s*|\r\s*)", " ", json_text
+            )  # Remove newlines and extra spaces
+            cleaned_text = re.sub(r",(\s*\}|\s*\])", r"\1", cleaned_text)  # Remove trailing commas
+
             try:
                 pairs = json.loads(cleaned_text)
-                if verbose:
-                    logger.info(f"Successfully parsed {len(pairs)} QA pairs")
                 return pairs
             except json.JSONDecodeError as e:
-                if verbose:
-                    logger.info(f"Direct JSON parsing failed: {e}")
-                    logger.info(f"Attempted to parse: {cleaned_text[:200]}...")
+                logger.info(f"Direct JSON parsing failed: {e}")
+                ## Fix Json Format for Missing Double Quote in Text String Closing.
+                text = cleaned_text
+                start = text.find("[")
+                end = text.rfind("]")
+                list_start = text.find("{")
+                list_end = text.rfind("}")
+                if text[list_end] != '"':
+                    cleaned_text = text[:list_end] + '"' + text[list_end:]
+                pairs = json.loads(cleaned_text)
+                return pairs
+
+        # If all fixes fail, return original with warning
+        raise Exception(f"Error during JSON extraction")
     except Exception as e:
-        if verbose:
-            logger.info(f"Error during JSON extraction: {e}")
-    
-    # Fallback to regex pattern matching
-    if verbose:
-        logger.info("Falling back to regex pattern matching")
+        logger.error(f"Falling back to regex pattern matching, Error during JSON extraction: {e}")
+
     qa_pattern = r'"question":\s*"((?:[^"\\]|\\.)*)"\s*,\s*"answer":\s*"((?:[^"\\]|\\.)*)"\s*'
     pairs = []
-    
+
     for match in re.finditer(qa_pattern, text):
         try:
             q = match.group(1).replace('\\"', '"')
@@ -79,38 +91,39 @@ def parse_qa_pairs(chunk_index: int, text: str) -> List[Dict[str, str]]:
         except Exception as e:
             if verbose:
                 logger.info(f"Error extracting pair: {e}")
-    
+
     if verbose:
         if pairs:
             logger.info(f"Extracted {len(pairs)} QA pairs with regex")
         else:
             logger.info("No QA pairs extracted. Check the model output format.")
-    
+
     return pairs
+
 
 def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> List[Dict[str, Any]]:
     """Parse rated items from LLM output
-    
+
     Attempts to parse JSON from LLM response. Will raise an exception if
     parsing fails. Never adds default ratings - either the model returns valid
     ratings or the function will crash.
-    
+
     Args:
         text: LLM response text to parse
         original_items: Original QA pairs (ignored - no defaults used)
-    
+
     Returns:
         List of items with ratings from the LLM
-        
+
     Raises:
         ValueError: If the response cannot be parsed as valid JSON
     """
-    verbose = os.environ.get('SDK_VERBOSE', 'false').lower() == 'true'
-    
+    verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
+
     if verbose:
         logger.info(f"Parsing ratings response of length {len(text)}")
         logger.info(f"Raw response: {repr(text[:500])}")
-    
+
     # The multiple passes are to for edge cases that emerge when using 8B or smaller models for generating synthetic data. This is to make a comprehensive parser for faster protoyping.
     # With 70B or bigger model, `json.load()` should "just work"
     try:
@@ -118,40 +131,41 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
         # First, remove any markdown or text before/after the JSON
         # Look for standard JSON start/end markers
         json_content = text.strip()
-        
+
         # Try to normalize escape sequences
-        json_content = json_content.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
-        
+        json_content = json_content.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t")
+
         # Check if we have a JSON object
-        if '{' in json_content and '}' in json_content:
-            start_idx = json_content.find('{')
-            end_idx = json_content.rfind('}') + 1
+        if "{" in json_content and "}" in json_content:
+            start_idx = json_content.find("{")
+            end_idx = json_content.rfind("}") + 1
             json_text = json_content[start_idx:end_idx]
-            
+
             # Clean up the JSON string to handle common issues
             # First, convert newlines to spaces in JSON
-            json_text = re.sub(r'\s*\n\s*', ' ', json_text)
-            
+            json_text = re.sub(r"\s*\n\s*", " ", json_text)
+
             # Now, try to parse it
             try:
                 parsed = json.loads(json_text)
-                if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
-                    if verbose:
-                        logger.info("Successfully parsed single JSON object")
+                if isinstance(parsed, dict) and (
+                    "question" in parsed and "answer" in parsed and "rating" in parsed
+                ):
+                    parsed["rating"] = int(float(parsed["rating"]))
                     return [parsed]
             except json.JSONDecodeError as e:
                 if verbose:
                     logger.info(f"JSON parse error for object: {str(e)}")
-        
+
         # Check if we have a JSON array
-        if '[' in json_content and ']' in json_content:
-            start_idx = json_content.find('[')
-            end_idx = json_content.rfind(']') + 1
+        if "[" in json_content and "]" in json_content:
+            start_idx = json_content.find("[")
+            end_idx = json_content.rfind("]") + 1
             json_text = json_content[start_idx:end_idx]
-            
+
             # Clean up the JSON string
-            json_text = re.sub(r'\s*\n\s*', ' ', json_text)
-            
+            json_text = re.sub(r"\s*\n\s*", " ", json_text)
+
             try:
                 parsed = json.loads(json_text)
                 if isinstance(parsed, list):
@@ -166,22 +180,24 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
             except json.JSONDecodeError as e:
                 if verbose:
                     logger.info(f"JSON parse error for array: {str(e)}")
-    
+
     except Exception as e:
         if verbose:
             logger.info(f"Error in primary parsing approach: {str(e)}")
-    
+
     # Fallback to more specific methods
     # Method 1: Code block extraction
     try:
-        code_blocks = re.findall(r'```(?:json)?\s*([\s\S]*?)```', text)
+        code_blocks = re.findall(r"```(?:json)?\s*([\s\S]*?)```", text)
         if code_blocks:
             for block in code_blocks:
                 try:
                     # Clean up newlines in the code block
-                    clean_block = re.sub(r'\s*\n\s*', ' ', block.strip())
+                    clean_block = re.sub(r"\s*\n\s*", " ", block.strip())
                     parsed = json.loads(clean_block)
-                    if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
+                    if isinstance(parsed, dict) and (
+                        "question" in parsed and "answer" in parsed and "rating" in parsed
+                    ):
                         if verbose:
                             logger.info("Successfully parsed from code block (single object)")
                         return [parsed]
@@ -193,14 +209,16 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                                 break
                         if valid_items and len(parsed) > 0:
                             if verbose:
-                                logger.info(f"Successfully parsed {len(parsed)} items from code block")
+                                logger.info(
+                                    f"Successfully parsed {len(parsed)} items from code block"
+                                )
                             return parsed
                 except json.JSONDecodeError:
                     pass
     except Exception as e:
         if verbose:
             logger.info(f"Error in code block extraction: {str(e)}")
-    
+
     # Method 2: Regex
     try:
         # Look for JSON patterns in the text
@@ -208,18 +226,20 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
             # Single object pattern
             r'(\{\s*"question"\s*:\s*"[^"]*"\s*,\s*"answer"\s*:\s*"[^"]*"\s*,\s*"rating"\s*:\s*\d+(?:\.\d+)?\s*\})',
             # Array pattern
-            r'(\[\s*\{\s*"question"\s*:.*"rating"\s*:\s*\d+(?:\.\d+)?\s*\}\s*\])'
+            r'(\[\s*\{\s*"question"\s*:.*"rating"\s*:\s*\d+(?:\.\d+)?\s*\}\s*\])',
         ]
-        
+
         for pattern in json_patterns:
             matches = re.findall(pattern, text, re.DOTALL)
             if matches:
                 for match in matches:
                     try:
                         # Clean up newlines in the match
-                        clean_match = re.sub(r'\s*\n\s*', ' ', match)
+                        clean_match = re.sub(r"\s*\n\s*", " ", match)
                         parsed = json.loads(clean_match)
-                        if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
+                        if isinstance(parsed, dict) and (
+                            "question" in parsed and "answer" in parsed and "rating" in parsed
+                        ):
                             if verbose:
                                 logger.info("Successfully parsed using regex (single object)")
                             return [parsed]
@@ -232,13 +252,16 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
     except Exception as e:
         if verbose:
             logger.info(f"Error in regex extraction: {str(e)}")
-    
+
     # Method 3: Try using json5 if available (more lenient parser)
     try:
         import json5
+
         try:
             parsed = json5.loads(text)
-            if isinstance(parsed, dict) and ("question" in parsed and "answer" in parsed and "rating" in parsed):
+            if isinstance(parsed, dict) and (
+                "question" in parsed and "answer" in parsed and "rating" in parsed
+            ):
                 if verbose:
                     logger.info("Successfully parsed using json5 (single object)")
                 return [parsed]
@@ -251,7 +274,7 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
     except ImportError:
         if verbose:
             logger.info("json5 not available")
-    
+
     # If we reach here, try one last aggressive approach
     try:
         # Try line-by-line parsing for each item
@@ -266,16 +289,20 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                 if match:
                     try:
                         rating = float(match.group(1))
-                        found_items.append({
-                            "question": item.get("question", ""),
-                            "answer": item.get("answer", ""),
-                            "rating": rating
-                        })
+                        found_items.append(
+                            {
+                                "question": item.get("question", ""),
+                                "answer": item.get("answer", ""),
+                                "rating": rating,
+                            }
+                        )
                         if verbose:
-                            logger.info(f"Found rating {rating} for question: {item.get('question', '')[:30]}...")
+                            logger.info(
+                                f"Found rating {rating} for question: {item.get('question', '')[:30]}..."
+                            )
                     except:
                         pass
-            
+
             if found_items:
                 if verbose:
                     logger.info(f"Extracted {len(found_items)} ratings using pattern matching")
@@ -283,28 +310,28 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
     except Exception as e:
         if verbose:
             logger.info(f"Error in final extraction attempt: {str(e)}")
-    
+
     # If we reach here, we couldn't extract valid JSON
     if verbose:
         logger.info("All parsing methods failed")
-    
-    # Instead of a generic error message, include part of the response
-    error_snippet = text[:100] if len(text) > 100 else text
-    raise ValueError(f"Could not parse JSON with ratings: {error_snippet}")
 
-def convert_to_conversation_format(qa_pairs: List[Dict[str, str]], 
-                                 system_prompt: Optional[str] = None) -> List[List[Dict[str, str]]]:
+    raise ValueError(f"Could not parse JSON with ratings: {text}")
+
+
+def convert_to_conversation_format(
+    qa_pairs: List[Dict[str, str]], system_prompt: Optional[str] = None
+) -> List[List[Dict[str, str]]]:
     """Convert QA pairs to conversation format"""
     if system_prompt is None:
         system_prompt = "You are a helpful AI assistant that provides accurate, detailed responses."
-    
+
     conversations = []
     for pair in qa_pairs:
         conversation = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": pair["question"]},
-            {"role": "assistant", "content": pair["answer"]}
+            {"role": "assistant", "content": pair["answer"]},
         ]
         conversations.append(conversation)
-    
+
     return conversations

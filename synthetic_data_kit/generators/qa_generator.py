@@ -8,7 +8,7 @@
 from typing import Dict, List, Any, Optional, Tuple
 import json
 import time
-import os
+import os, math
 from pathlib import Path
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
 
@@ -48,16 +48,25 @@ class QAGenerator:
         self.generation_config = get_generation_config(self.config)
         self.curate_config = get_curate_config(self.config)
         self.rag_config = get_rag_config(self.config)
+        self.enable_rag = self.rag_config.get("enable_rag", False)
+        self.chunk_size_in_token = self.generation_config.get("chunk_size", 256)
+        self.token_to_char_ratio = self.generation_config.get("token_to_char_ratio", 6)
+        self.max_input_chars = max(
+            1000, (self.generation_config.get("max_tokens", 2000) * self.token_to_char_ratio) - 2000
+        )
+        self.chunk_size_in_chars = self.generation_config.get(
+            "chunk_size", 256
+        ) * self.generation_config.get("token_to_char_ratio", 6)
 
     def _split_article_into_chunks(self, document_text: str) -> List[str]:
         """Split text into chunks with optional overlap"""
         # Get generation config, 5 chars per token in averages
-        chunk_size_in_chars = self.generation_config.get(
-            "chunk_size", 256
-        ) * self.generation_config.get("token_to_char_ratio", 6)
+
         overlap = self.generation_config.get("overlap", 50) * 6
         # Split text into chunks
-        chunks = split_into_chunks(document_text, chunk_size=chunk_size_in_chars, overlap=overlap)
+        chunks = split_into_chunks(
+            document_text, chunk_size=self.chunk_size_in_chars, overlap=overlap
+        )
         return chunks
 
     def write2rag(self, fileName: str, chunks: List[str], summaries: List[Dict[str, str]]) -> bool:
@@ -74,9 +83,7 @@ class QAGenerator:
         because batch_inference may return empty data, we have to map chunkid to summary
         """
         try:
-            enable_rag = self.rag_config.get("enable_rag", False)
-
-            if enable_rag:
+            if self.enable_rag:
                 fileNames = [fileName for _ in range(len(chunks))]
                 metas = [
                     {"filename": f, "id": s["id"], "summary": s["data"]}
@@ -100,72 +107,68 @@ class QAGenerator:
 
     def refine_qa_pairs(self, qa_pairs: List[Dict[str, str]]) -> List[Dict[str, str]]:
 
-        verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
-        temperature = self.generation_config.get("temperature", 0.7)
         batch_size = self.generation_config.get("batch_size", 32)
-        enable_rag = self.rag_config.get("enable_rag", False)
         final_results: List[Dict[str, str]] = qa_pairs
 
         if qa_pairs is None or len(qa_pairs) == 0:
             raise Exception(f"Failed to process qa refinement, empty qa pairs")
 
-        if enable_rag == True:
-            ragClient = RAGProccesor(self.client, self.config_path)
-            results: List[Dict[str, str]] = []
-            prompt_messages: List[List[Dict[str, str]]] = []
+        ragClient = RAGProccesor(self.client, self.config_path)
+        results: List[Dict[str, str]] = []
+        prompt_messages: List[List[Dict[str, str]]] = []
 
+        logger.info(
+            f"Processing QA Refinement, stage 1 content enrichment, with {len(qa_pairs)} QA pairs"
+        )
+
+        try:
+            prompt_messages = ragClient.buildPrompt(qa_pairs, max_chars=self.max_input_chars)
+            if prompt_messages is None:
+                raise Exception("ragClient.query returned None")
+        except Exception as e:
+            logger.error(f"Exception occurred during QA refinement: {e}")
+            raise Exception(f"Exception occurred during QA refinement: {e}")
+
+        # process batch inference to generate refined QA pair
+        if len(prompt_messages) > 0:
             logger.info(
-                f"Processing QA Refinement, stage 1 content enrichment, with {len(qa_pairs)} QA pairs"
+                f"Processing QA Refinement, stage 2 batch infernece with message size: {len(prompt_messages)}"
             )
-            # @TODO Make it batch, and skip error
-            try:
-                prompt_messages = ragClient.query(qa_pairs)
-                if prompt_messages is None:
-                    raise Exception("ragClient.query returned None")
-            except Exception as e:
-                logger.error(f"Exception occurred during QA refinement: {e}")
-                raise Exception(f"Exception occurred during QA refinement: {e}")
+            retry_count = 0
+            max_retries = 3
 
-            # process batch inference to generate refined QA pair
-            if len(prompt_messages) > 0:
+            all_inference_outputs = []
+            # Process in batches
+            for batch_start in range(0, len(prompt_messages), batch_size):
+                batch_end = min(batch_start + batch_size, len(prompt_messages))
+                batch_messages = prompt_messages[batch_start:batch_end]
+                current_batch_size = len(batch_messages)
+
+                batch_num = batch_start // batch_size + 1
+                total_batches = (len(prompt_messages) + batch_size - 1) // batch_size
+
+                # Simple progress indicator for non-verbose mode
                 logger.info(
-                    f"Processing QA Refinement, stage 2 batch infernece with message size: {len(prompt_messages)}"
+                    f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
                 )
-                retry_count = 0
-                max_retries = 3
 
-                all_inference_outputs = []
-                # Process in batches
-                for batch_start in range(0, len(prompt_messages), batch_size):
-                    batch_end = min(batch_start + batch_size, len(prompt_messages))
-                    batch_messages = prompt_messages[batch_start:batch_end]
-                    current_batch_size = len(batch_messages)
+                while retry_count < max_retries:
+                    try:
+                        results = self.batch_inference(batch_messages, taskFunc=parse_qa_pairs)
+                        if len(results) > 0:
+                            all_inference_outputs.extend(results)
+                            break
+                        else:
+                            raise Exception(f"Failed to process qa refinement")
+                    except Exception as e:
+                        print(f"Attempt {retry_count + 1} failed with error: {e}")
+                        retry_count += 1
 
-                    batch_num = batch_start // batch_size + 1
-                    total_batches = (len(prompt_messages) + batch_size - 1) // batch_size
-
-                    # Simple progress indicator for non-verbose mode
-                    logger.info(
-                        f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
-                    )
-
-                    while retry_count < max_retries:
-                        try:
-                            results = self.batch_inference(batch_messages, taskFunc=parse_qa_pairs)
-                            if len(results) > 0:
-                                all_inference_outputs.extend(results)
-                                break
-                            else:
-                                raise Exception(f"Failed to process qa refinement")
-                        except Exception as e:
-                            print(f"Attempt {retry_count + 1} failed with error: {e}")
-                            retry_count += 1
-
-                    final_results = all_inference_outputs
-            else:
-                logger.error(
-                    f"Failed to process qa refinement after maximum retries in batch inference."
-                )
+                final_results = all_inference_outputs
+        else:
+            logger.error(
+                f"Failed to process qa refinement after maximum retries in batch inference."
+            )
 
         return final_results
 
@@ -176,26 +179,24 @@ class QAGenerator:
         logger.info(
             f"\tRecursive summarization with internal RAG handling at level {current_depth + 1}"
         )
-        chunk_size_in_token = self.generation_config.get("chunk_size", 256)
-        token_to_char_ratio = self.generation_config.get("token_to_char_ratio", 6)
-        max_input_chars = max(
-            1000, (self.generation_config.get("max_tokens", 2000) * token_to_char_ratio) - 2000
-        )
+
         summary_prompt_template = get_prompt(self.config, "summary")
-        summary_prompt = summary_prompt_template.format(sumamry_length=chunk_size_in_token / 2)
+        summary_prompt = summary_prompt_template.format(sumamry_length=self.chunk_size_in_token / 2)
 
         document_text = chunk.strip()
         # Base case: Text fits within model constraints or Maximum recursion depth reached
-        if len(document_text) <= max_input_chars or current_depth >= max_depth:
+        if len(document_text) <= self.max_input_chars or current_depth >= max_depth:
 
             # Final Summary should be more detailed
-            summary_prompt = summary_prompt_template.format(sumamry_length=chunk_size_in_token * 2)
-            document_text = document_text[: min(len(document_text) - 1, max_input_chars)]
+            summary_prompt = summary_prompt_template.format(
+                sumamry_length=self.chunk_size_in_token * 2
+            )
+            document_text = document_text[: min(len(document_text) - 1, self.max_input_chars)]
             summary = None
 
             max_retries = 3
             current_retry = 0
-            while(current_retry < max_retries):
+            while current_retry < max_retries:
                 try:
                     # Only one full chunk of one big doc
                     # Get summary generation prompt template for consolidation
@@ -207,19 +208,17 @@ class QAGenerator:
                     logger.info(f"Summarizing final chunks output of {len(str(messages))} ...")
                     # 1. Generate Summary
                     summary = self.client.chat_completion(messages, temperature=0.1)
-                    # 2. Write chunks to rag for better QA pair generation
-                    self.write2ragItem(fileName, document_text, summary)
                     # Success, break the loop
                     break
                 except Exception as e:
                     logger.error(f"error in final summarization, with exception {e}")
                     logger.error(f"shrinking document contenxt by half")
-                    document_text = document_text[: len(document_text)/2]
+                    document_text = document_text[: len(document_text) / 2]
                     current_retry = current_retry + 1
-            
+
             if summary is None:
                 raise Exception(f"Critical error in final summarization.")
-            
+
             return summary.strip()
 
         # Recursive case: Split, summarize chunks, and combine
@@ -239,8 +238,10 @@ class QAGenerator:
         )
         # Get batch output for summaries of all chunks
         summaries = self.batch_inference(all_messages, taskFunc=parse_summary, temperature=0.1)
-        # Write chunks to rag for better QA pair generation
-        self.write2rag(fileName, chunks, summaries)
+        # Write chunks to rag for better QA pair generation, only for top stack which is fact.
+        if self.enable_rag and current_depth == 0:
+            self.write2rag(fileName, chunks, summaries)
+
         summaries = list(map(lambda x: x.get("data"), summaries))
         summaries_text = "\n".join(summaries).strip()
         return self._recursive_summarize(
@@ -254,9 +255,78 @@ class QAGenerator:
         """Generate summary with recursive processing and internal RAG handling"""
         logger.info(f"Calling Summarization for document size of {len(document_text)}")
 
-        consolidated_summary = self._recursive_summarize(
-            document_text, fileName=fileName, max_depth=9, current_depth=0
+        chunk_size_in_token = self.generation_config.get("chunk_size", 256)
+        token_to_char_ratio = self.generation_config.get("token_to_char_ratio", 6)
+        max_input_chars = max(
+            1000, (self.generation_config.get("max_tokens", 2000) * token_to_char_ratio) - 2000
         )
+        summary_prompt_template = get_prompt(self.config, "summary")
+        summary_prompt = summary_prompt_template.format(sumamry_length=chunk_size_in_token / 2)
+
+        document_text = document_text.strip()
+        consolidated_summary = None
+
+        # Short Document fit into LLM context window for one fetch
+        if len(document_text) <= max_input_chars:
+            # Final Summary should be more detailed
+            summary_prompt = summary_prompt_template.format(sumamry_length=chunk_size_in_token * 2)
+            document_text = document_text[: min(len(document_text) - 1, max_input_chars)]
+            summary = None
+
+            max_retries = 3
+            current_retry = 0
+            while current_retry < max_retries:
+                try:
+                    # Only one full chunk of one big doc
+                    # Get summary generation prompt template for consolidation
+                    messages = [
+                        {"role": "system", "content": summary_prompt},
+                        {"role": "user", "content": document_text},
+                    ]
+
+                    logger.info(f"Summarizing final chunks output of {len(str(messages))} ...")
+                    # 1. Generate Summary only, inner generated content should NOT write to RAG
+                    summary = self.client.chat_completion(messages, temperature=0.1)
+                    # Success, break the loop
+                    break
+                except Exception as e:
+                    logger.error(f"error in final summarization, with exception {e}")
+                    logger.error(f"shrinking document contenxt by half")
+                    document_text = document_text[: len(document_text) / 2]
+                    current_retry = current_retry + 1
+
+            if summary is None:
+                raise Exception(f"Critical error in final summarization.")
+
+            consolidated_summary = summary.strip()
+
+            if self.enable_rag:
+                all_messages = []
+                chunks = self._split_article_into_chunks(document_text)
+                for i, chunk in enumerate(chunks):
+                    # Format the prompt with summary and text
+                    messages = [
+                        {"role": "system", "content": summary_prompt},
+                        {"role": "user", "content": chunk},
+                    ]
+                    all_messages.append(messages)
+
+                # Batch Processing with multiple messages
+                logger.info(
+                    f"Cut a doc size of {len(document_text)} into {len(chunks)} chunks to generate summary..."
+                )
+                # Get batch output for summaries of all chunks
+                summaries = self.batch_inference(
+                    all_messages, taskFunc=parse_summary, temperature=0.1
+                )
+                # Write chunks to rag for better QA pair generation
+                self.write2rag(fileName, chunks, summaries)
+        else:
+            # Long Document for recursive summarization
+            consolidated_summary = self._recursive_summarize(
+                document_text, fileName=fileName, max_depth=9, current_depth=0
+            )
+
         return consolidated_summary.strip()
 
     def generate_qa_pairs(
@@ -270,11 +340,10 @@ class QAGenerator:
         verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
         batch_size = self.generation_config.get("batch_size", 32)
         collection_name = self.rag_config.get("collection_name", "default")
-        enable_rag = self.rag_config.get("enable_rag", False)
 
         # Split text into chunks
         chunks = self._split_article_into_chunks(document_text)
-        pairs_per_chunk = max(1, round(num_pairs / len(chunks)))
+        pairs_per_chunk = max(1, math.ceil(num_pairs / len(chunks)))
 
         logger.info(
             f"Generating QA pairs, document split into {len(chunks)} chunks, with {pairs_per_chunk} QA pairs in a chunk"
@@ -302,7 +371,7 @@ class QAGenerator:
         logger.info(f"QA Generation: {len(result)} outputs in total.")
 
         ## Update QA Pair with RAG
-        if result and len(result) > 0 and enable_rag:
+        if result and len(result) > 0 and self.enable_rag:
             logger.info(f"refining qa-pairs, total number: {len(result)} ...")
             result = self.refine_qa_pairs(result)
 
@@ -504,8 +573,7 @@ class QAGenerator:
             os.environ["SDK_VERBOSE"] = "false"
 
         # For Debug Only
-        enable_rag = self.rag_config.get("enable_rag", False)
-        if enable_rag:
+        if self.enable_rag:
             ragClient = RAGProccesor(self.client, self.config_path)
             ragClient.truncate()
 
