@@ -1,38 +1,39 @@
 {% extends 'base.html' %}
 
-{% block title %}Synthetic Data Kit - Home{% endblock %}
+{% block title %}AnyZearch Synthetic Data - Home{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4">
             <div class="card-header">
-                <h1 class="card-title">Synthetic Data Kit Web Interface</h1>
+                <h1 class="card-title">AnyZearch Synthetic Data</h1>
             </div>
             <div class="card-body">
-                <p>Welcome to the Synthetic Data Kit web interface. This tool allows you to generate and curate synthetic question-answer pairs from text documents.</p>
-                
+                <p>Welcome to the AnyZearch Synthetic Data. This tool allows you to generate and curate
+                    synthetic question-answer pairs from text documents.</p>
+
                 <h2>Current Configuration</h2>
                 <div class="alert alert-info">
                     <p><strong>LLM Provider:</strong> {{ provider }}</p>
                 </div>
-                
+
                 <h2>Available Operations</h2>
-                <div class="row mt-4">
-                    <div class="col-md-4 mb-3">
+                <div class="row mt-5">
+                    <div class="col-md-5 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-info text-white">
                                 Ingest Document
                             </div>
                             <div class="card-body">
                                 <p>Parse documents (PDF, HTML, YouTube, DOCX, PPT, TXT) into clean text.</p>
-                                <a href="{{ url_for('ingest') }}" class="btn btn-info">Ingest Document</a>
+                                <a href="{{ url_for('ingest') }}" class="btn btn-primary">Ingest Document</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-5 mb-3">
                         <div class="card h-100">
-                            <div class="card-header bg-primary text-white">
+                            <div class="card-header bg-info  text-white">
                                 Create Content
                             </div>
                             <div class="card-body">
@@ -41,18 +42,29 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-5 mb-3">
                         <div class="card h-100">
-                            <div class="card-header bg-success text-white">
+                            <div class="card-header bg-info  text-white">
                                 Curate QA Pairs
                             </div>
                             <div class="card-body">
                                 <p>Curate and improve existing question-answer pairs with an LLM.</p>
-                                <a href="{{ url_for('curate') }}" class="btn btn-success">Curate QA Pairs</a>
+                                <a href="{{ url_for('curate') }}" class="btn btn-primary">Curate QA Pairs</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-5 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-info  text-white">
+                                Generate SFT Dataset
+                            </div>
+                            <div class="card-body">
+                                <p>Save file into Storage format [json|hf]. Convert to different formats for fine-tuning.</p>
+                                <a href="{{ url_for('save') }}" class="btn btn-primary">Generate SFT Dataset</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-secondary text-white">
                                 File Browser

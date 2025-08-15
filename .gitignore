@@ -10,3 +10,4 @@ __pycache__
 .git
 data
 config.yaml
+configs/config.yaml

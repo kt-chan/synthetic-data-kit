@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Curate QA Pairs{% endblock %}
+{% block title %}Generate SFT Data{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4">
             <div class="card-header">
-                <h2>Curate QA Pairs</h2>
+                <h2>Generate SFT Dataset from QA Pairs</h2>
             </div>
             <div class="card-body">
-                <p>Curate and improve existing question-answer pairs using the {{ provider }} provider.</p>
+                <p>Generate SFT Data from question-answer pairs using the {{ provider }} provider.</p>
 
                 <form method="POST" class="mt-4 loading-form"
-                    data-loading-message="Curating QA pairs with LLM... This may take some time">
+                    data-loading-message="Genearting SFT Dataset ... This may take some time">
                     {{ form.csrf_token }}
 
                     <div class="mb-3">
@@ -47,45 +47,17 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="num_pairs" class="form-label">{{ form.num_pairs.label }}</label>
-                        {{ form.num_pairs(class="form-control", placeholder="Number of QA pairs to keep (0 for all)") }}
-                        {% if form.num_pairs.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.num_pairs.errors %}
-                            {{ error }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">Enter the number of QA pairs you want to keep after curation (0 to keep
-                            all pairs).</div>
+                        <label for="output_format" class="form-label">{{ form.output_format.label }}</label>
+                        {{ form.output_format(class="form-select", id="output_format_selector") }}
+                        <div class="form-text">Select which output format to generate the SFT dataset, supported format:
+                            jsonl, alpaca, ft, chatml.</div>
                     </div>
 
-                    <div class="accordion" id="advancedOptions">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingAdvanced">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#collapseAdvanced">
-                                    Advanced Options
-                                </button>
-                            </h2>
-                            <div id="collapseAdvanced" class="accordion-collapse collapse"
-                                data-bs-parent="#advancedOptions">
-                                <div class="accordion-body">
-                                    <div class="mb-3">
-                                        <label for="model" class="form-label">{{ form.model.label }}</label>
-                                        {{ form.model(class="form-control", placeholder="Leave blank for default model")
-                                        }}
-                                        <div class="form-text">Specify a model name to use instead of the default.</div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="api_base" class="form-label">{{ form.api_base.label }}</label>
-                                        {{ form.api_base(class="form-control", placeholder="Leave blank for default API URL") }}
-                                        <div class="form-text">Specify a custom API base URL.</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        <label for="storage_format" class="form-label">{{ form.storage_format.label }}</label>
+                        {{ form.storage_format(class="form-select", id="storage_format_selector") }}
+                        <div class="form-text">Select which storage format to generate the SFT dataset, supported
+                            format: json, hf</div>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">

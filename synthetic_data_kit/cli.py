@@ -436,7 +436,9 @@ def process(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ):
     """
-    End to End Process
+    End to End Process from ingest, to create, to curate, to save-as
+    """
+    """
     // "args": "-c config.yaml ingest ./data/pdf/report.pdf"
     // "args": "-c config.yaml create ./data/output/report.txt"
     // "args": "-c config.yaml curate ./data/generated/report_qa_pairs.json"

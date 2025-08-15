@@ -20,7 +20,8 @@
                                 {% if output_files %}
                                 <div class="list-group">
                                     {% for file in output_files %}
-                                    <a href="{{ url_for('view_file', file_path=file) }}" class="list-group-item list-group-item-action">
+                                    <a href="{{ url_for('view_file', file_path=file) }}"
+                                        class="list-group-item list-group-item-action">
                                         {{ file }}
                                     </a>
                                     {% endfor %}
@@ -34,17 +35,18 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <div class="card mb-3">
-                            <div class="card-header bg-success text-white">
+                            <div class="card-header bg-primary text-white">
                                 <h4>Generated Files</h4>
                             </div>
                             <div class="card-body">
                                 {% if generated_files %}
                                 <div class="list-group">
                                     {% for file in generated_files %}
-                                    <a href="{{ url_for('view_file', file_path=file) }}" class="list-group-item list-group-item-action">
+                                    <a href="{{ url_for('view_file', file_path=file) }}"
+                                        class="list-group-item list-group-item-action">
                                         {{ file }}
                                     </a>
                                     {% endfor %}
@@ -54,7 +56,57 @@
                                 {% endif %}
                             </div>
                             <div class="card-footer text-end">
-                                <a href="{{ url_for('create') }}" class="btn btn-success btn-sm">Generate QA Pairs</a>
+                                <a href="{{ url_for('create') }}" class="btn btn-primary btn-sm">Generate QA Pairs</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h4>Curated Files</h4>
+                            </div>
+                            <div class="card-body">
+                                {% if curated_files %}
+                                <div class="list-group">
+                                    {% for file in curated_files %}
+                                    <a href="{{ url_for('view_file', file_path=file) }}"
+                                        class="list-group-item list-group-item-action">
+                                        {{ file }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No files found in the cleaneded directory.</p>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer text-end">
+                                <a href="{{ url_for('curate') }}" class="btn btn-primary btn-sm">Curate QA Pairs</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h4>SFT Training Files</h4>
+                            </div>
+                            <div class="card-body">
+                                {% if sft_final_files %}
+                                <div class="list-group">
+                                    {% for file in sft_final_files %}
+                                    <a href="{{ url_for('view_file', file_path=file) }}"
+                                        class="list-group-item list-group-item-action">
+                                        {{ file }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No files found in the sft final directory.</p>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer text-end">
+                                <a href="{{ url_for('save') }}" class="btn btn-success btn-sm">Generate SFT Dataset</a>
                             </div>
                         </div>
                     </div>
