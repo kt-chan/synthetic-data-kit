@@ -11,3 +11,4 @@ __pycache__
 data
 config.yaml
 configs/config.yaml
+/configs
