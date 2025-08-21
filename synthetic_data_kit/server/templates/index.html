@@ -14,64 +14,104 @@
                     synthetic question-answer pairs from text documents.</p>
 
                 <h2>Current Configuration</h2>
-                <div class="alert alert-info">
-                    <p><strong>LLM Provider:</strong> {{ provider }}</p>
+                <div class="alert alert-info d-flex align-items-center">
+                    <p class="mb-0"><strong>LLM Provider:</strong> {{ provider }}</p>
+                    <div class="ms-auto">
+                        <a href="{{ url_for('set_config') }}" class="btn btn-secondary">Configuration</a>
+                    </div>
                 </div>
 
-                <h2>Available Operations</h2>
+
+                <h2>Process all in once</h2>
+                <form action="{{ url_for('process') }}" method="POST">
+                    <div class="alert alert-info d-flex flex-column align-items-center">
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <div class="flex-item" style="flex: 0 0 80%;">
+                                <p class="mb-0"><strong>Turn all ingested file into SFT dataset</strong></p>
+                                <p class="mb-0">This could take anywhere from a few minutes to several days, depending
+                                    on the size of the model and the task. It would run through create, curate, and
+                                    generate sft data file by file</p>
+                            </div>
+                            <div class="flex-item" style="flex: 0 0 20%; text-align: right;">
+                                <div class="ms-auto">
+                                    <button type="submit" class="btn btn-primary">Process in Once</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- <div class="alert alert-info d-flex flex-column align-items-center">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div class="flex-item" style="flex: 0 0 80%;">
+                            <p class="mb-0"><strong>Turn all ingested file into SFT dataset</strong></p>
+                            <p class="mb-0">This could take anywhere from a few minutes to several days, depending on
+                                the size of the model and the task. It would run through create, curate, and generate
+                                sft data file by file</p>
+                        </div>
+                        <div class="flex-item" style="flex: 0 0 20%; text-align: right;">
+                            <div class="ms-auto">
+                                <a href="{{ url_for('process') }}" class="btn btn-primary">Process in Once</a>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+            <div class="card-body">
+                <h2>Available Individual Operations</h2>
                 <div class="row mt-5">
-                    <div class="col-md-5 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-info text-white">
                                 Ingest Document
                             </div>
-                            <div class="card-body">
+                            <div class="card-body d-flex flex-column">
                                 <p>Parse documents (PDF, HTML, YouTube, DOCX, PPT, TXT) into clean text.</p>
-                                <a href="{{ url_for('ingest') }}" class="btn btn-primary">Ingest Document</a>
+                                <a href="{{ url_for('ingest') }}" class="btn btn-primary mt-auto">Ingest Document</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-5 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-info  text-white">
                                 Create Content
                             </div>
-                            <div class="card-body">
+                            <div class="card-body d-flex flex-column">
                                 <p>Generate content from text: QA pairs, summaries, Chain of Thought examples.</p>
-                                <a href="{{ url_for('create') }}" class="btn btn-primary">Create Content</a>
+                                <a href="{{ url_for('create') }}" class="btn btn-primary mt-auto">Create Content</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-5 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-info  text-white">
                                 Curate QA Pairs
                             </div>
-                            <div class="card-body">
+                            <div class="card-body d-flex flex-column">
                                 <p>Curate and improve existing question-answer pairs with an LLM.</p>
-                                <a href="{{ url_for('curate') }}" class="btn btn-primary">Curate QA Pairs</a>
+                                <a href="{{ url_for('curate') }}" class="btn btn-primary mt-auto">Curate QA Pairs</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-5 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-info  text-white">
                                 Generate SFT Dataset
                             </div>
-                            <div class="card-body">
-                                <p>Save file into Storage format [json|hf]. Convert to different formats for fine-tuning.</p>
-                                <a href="{{ url_for('save') }}" class="btn btn-primary">Generate SFT Dataset</a>
+                            <div class="card-body d-flex flex-column">
+                                <p>Save file into Storage format [json|hf]. Convert to different formats for
+                                    fine-tuning.</p>
+                                <a href="{{ url_for('save') }}" class="btn btn-primary mt-auto">Generate SFT Dataset</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-5 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-secondary text-white">
                                 File Browser
                             </div>
-                            <div class="card-body">
+                            <div class="card-body d-flex flex-column">
                                 <p>Browse and view generated files and QA pairs in your data directory.</p>
-                                <a href="{{ url_for('files') }}" class="btn btn-secondary">Browse Files</a>
+                                <a href="{{ url_for('files') }}" class="btn btn-secondary mt-auto">Browse Files</a>
                             </div>
                         </div>
                     </div>

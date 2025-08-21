@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "D:\\GitHub\\synthetic-data-kit\\synthetic_data_kit\\cli.py",
             "console": "integratedTerminal",
-            "args": "-c ./configs/config.yaml server"
+            "args": "-c ./configs/config.yaml server --debug"
             // "args": "-c ./configs/config.yaml process ./data/output/report.txt"
             // "args": "-c ./configs/config.yaml save-as data/cleaned/report_qa_pairs_cleaned.json -f ft --storage json"
             // "args": "-c ./configs/config.yaml curate ./data/generated/report_qa_pairs.json"

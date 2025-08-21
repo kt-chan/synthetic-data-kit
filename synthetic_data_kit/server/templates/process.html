@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}System Configuration{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <strong>Warning: Turn all ingested files below into SFT dataset</strong>
+            <p class="mb-0">This could take anywhere from a few minutes to several days, depending
+                on the size of the model and the task. </p>
+            <p> This would run through create, curate, and generate sft data file by file</p>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>Processing Files</h2>
+            </div>
+            <div class="card-body">
+                {% if files %}
+                <div class="list-group" style="max-height: 200px; overflow-y: auto;">
+                    {% for file in files %}
+                    <a href="{{ url_for('view_file', file_path=file) }}" class="list-group-item list-group-item-action">
+                        {{ file }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No files found in the output directory.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>Execution Log</h2>
+            </div>
+            <div class="card-body">
+                <div id="editor" style="height: 400px; width: 100%; overflow-y: auto;"></div>
+            </div>
+            <div class="card-footer text-end">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fixed: Properly quoted JSON in the data-files attribute -->
+<div id="file-list-data" data-files='{{ files | tojson | safe }}'></div>
+
+<script type="text/javascript">
+    // Get the file list from the template context
+    const fileElement = document.getElementById('file-list-data');
+    let task_files;
+
+    try {
+        // Get the raw data attribute value
+        const rawData = fileElement.getAttribute('data-files');
+        console.log("Raw data:", rawData);
+
+        // Parse the JSON string from the data-files attribute
+        task_files = JSON.parse(rawData);
+        console.log("Parsed files:", task_files);
+    } catch (error) {
+        console.error("Failed to parse file list:", error);
+        task_files = [];
+    }
+
+    // Redirect to the trigger_task route with the file list as a query parameter
+    window.onload = async function () {
+        if (Array.isArray(task_files) && task_files.length > 0) {
+            try {
+                const filesJson = JSON.stringify(task_files);
+                const response = await fetch('/process_all_task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: filesJson
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const eventSource = new EventSource('/process_all_task');
+                eventSource.onmessage = function (event) {
+                    event_data = event.data
+                    console.info('EventSource success:', event_data);
+                    const logsDiv = document.getElementById('editor');
+                    logsDiv.innerHTML += event_data + '<br>';
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                };
+                eventSource.onerror = function (error) {
+                    console.error('EventSource failed:', error);
+                    alert('An error occurred while initializing the log stream.');
+                };
+
+                window.addEventListener('beforeunload', function () {
+                    eventSource.close();
+                });
+            } catch (error) {
+                console.error('Request failed:', error);
+                alert('An error occurred while initializing the task.');
+            }
+        } else {
+            console.error("Task files is not an array or is empty:", task_files);
+            alert("No files to process. Please add files first.");
+        }
+    };
+</script>
+{% endblock %}

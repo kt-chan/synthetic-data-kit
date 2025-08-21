@@ -2,33 +2,59 @@
 Flask application for the Synthetic Data Kit web interface.
 """
 
-import os
-import json
+from concurrent.futures import ThreadPoolExecutor
+import os, time, json
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union
-
-import flask
-from flask import Flask, render_template, request, redirect, url_for, jsonify, abort, flash
+from flask import (
+    Flask,
+    Response,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    jsonify,
+    abort,
+    flash,
+)
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, IntegerField, SelectField, FileField, SubmitField
 from wtforms.validators import DataRequired, Optional as OptionalValidator
+from urllib.parse import unquote
 
-from synthetic_data_kit.utils.config import load_config, get_llm_provider, get_path_config
+from synthetic_data_kit.utils.config import (
+    load_config,
+    get_llm_provider,
+    get_config_path,
+    get_path_config,
+)
 from synthetic_data_kit.core.create import process_file
 from synthetic_data_kit.core.curate import curate_qa_pairs
 from synthetic_data_kit.core.save_as import convert_format
 from synthetic_data_kit.core.ingest import process_file as ingest_process_file
-import logging
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import logging, queue
+from synthetic_data_kit.utils.AppLogger import setup_logging, get_logger, log_function_call
+from logging.handlers import QueueHandler, QueueListener
 
-app = Flask(__name__)
+GLOBAL_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GLOBAL_DEBUG_FLAG = False
+GLOBAL_LOG_LEVEL = logging.INFO
+GLOBAL_CONFIG = load_config()
+
+app = Flask(
+    __name__, static_folder=os.path.join(GLOBAL_BASE_DIR, "static"), static_url_path="/static"
+)
 app.config["SECRET_KEY"] = os.urandom(24)
+executor = ThreadPoolExecutor(max_workers=1)
+logger = None
+log_queue = None
 
 # Set default paths
+DEFAULT_LOG_DIR = Path(__file__).parents[2] / "logs"
 DEFAULT_DATA_DIR = Path(__file__).parents[2] / "data"
+DEFAULT_CONFIG_DIR = Path(__file__).parents[2] / "configs"
 DEFAULT_OUTPUT_DIR = DEFAULT_DATA_DIR / "output"
 DEFAULT_GENERATED_DIR = DEFAULT_DATA_DIR / "generated"
 DEFAULT_CURATED_DIR = DEFAULT_DATA_DIR / "cleaned"
@@ -40,8 +66,34 @@ DEFAULT_GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_CURATED_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_FINAL_DIR.mkdir(parents=True, exist_ok=True)
 
-# Load SDK config
-config = load_config()
+
+def reload_config():
+    """Reload the configuration from the config file."""
+    global GLOBAL_CONFIG
+    GLOBAL_CONFIG = load_config()
+    return GLOBAL_CONFIG
+
+
+def reload_setup(debug=False):
+    """Reload the configuration from the config file."""
+    global GLOBAL_DEBUG_FLAG
+    global GLOBAL_LOG_LEVEL
+    global logger
+    global log_queue
+    GLOBAL_DEBUG_FLAG = debug
+
+    if GLOBAL_DEBUG_FLAG:
+        GLOBAL_LOG_LEVEL = logging.DEBUG
+
+    setup_logging(log_file=str((DEFAULT_LOG_DIR / "app.log").resolve()), log_level=GLOBAL_LOG_LEVEL)
+    logger = get_logger(__name__)
+
+    # Initialize thread-safe queue
+    log_queue = queue.Queue()
+    queue_handler = QueueHandler(log_queue)
+    logger.addHandler(queue_handler)
+    queue_listener = QueueListener(log_queue, logging.StreamHandler())
+    queue_listener.start()
 
 
 # Forms
@@ -59,10 +111,62 @@ class CreateForm(FlaskForm):
         ],
         default="qa",
     )
-    num_pairs = IntegerField("Number of QA Pairs", default=10)
+    num_pairs = IntegerField("Number of QA Pairs", default=100)
     model = StringField("Model Name (optional)")
     api_base = StringField("API Base URL (optional)")
     submit = SubmitField("Generate Content")
+
+
+class ProcessForm(FlaskForm):
+    """Form for updating files"""
+
+    editor = TextAreaField("Editor", validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(ProcessForm, self).__init__(*args, **kwargs)
+        try:
+            # Try to open config.yaml
+            with open(DEFAULT_CONFIG_DIR / "config.yaml", "r", encoding="utf-8") as f:
+                self.editor.data = f.read()
+        except FileNotFoundError as e:
+            # If config.yaml does not exist, use config-default.yaml
+            with open(DEFAULT_CONFIG_DIR / "config-default.yaml", "r", encoding="utf-8") as f:
+                self.editor.data = f.read()
+
+        with open(DEFAULT_CONFIG_DIR / "config-default.yaml", "r", encoding="utf-8") as f:
+            self.editor.default = f.read()
+
+    def get_all_files(self, config):
+
+        # Get the list of available input files
+        input_files = []
+        if DEFAULT_OUTPUT_DIR.exists():
+            input_files = [
+                str(f.relative_to(DEFAULT_DATA_DIR.parent))
+                for f in DEFAULT_OUTPUT_DIR.glob("*.txt")
+            ]
+
+        return input_files
+
+
+class ConfigForm(FlaskForm):
+    """Form for updating files"""
+
+    editor = TextAreaField("Editor", validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(ConfigForm, self).__init__(*args, **kwargs)
+        try:
+            # Try to open config.yaml
+            with open(DEFAULT_CONFIG_DIR / "config.yaml", "r", encoding="utf-8") as f:
+                self.editor.data = f.read()
+        except FileNotFoundError as e:
+            # If config.yaml does not exist, use config-default.yaml
+            with open(DEFAULT_CONFIG_DIR / "config-default.yaml", "r", encoding="utf-8") as f:
+                self.editor.data = f.read()
+
+        with open(DEFAULT_CONFIG_DIR / "config-default.yaml", "r", encoding="utf-8") as f:
+            self.editor.default = f.read()
 
 
 class IngestForm(FlaskForm):
@@ -83,7 +187,7 @@ class CurateForm(FlaskForm):
     """Form for curating QA pairs"""
 
     input_file = StringField("Input JSON File Path", validators=[DataRequired()])
-    num_pairs = IntegerField("Number of QA Pairs to Keep", default=0)
+    num_pairs = IntegerField("Number of QA Pairs to Keep", default=10)
     model = StringField("Model Name (optional)")
     api_base = StringField("API Base URL (optional)")
     submit = SubmitField("Curate QA Pairs")
@@ -111,19 +215,180 @@ class SaveAsForm(FlaskForm):
     submit = SubmitField("Generate SFT Dataset")
 
 
+@app.template_filter("escape_js")
+def escape_js(value):
+    # Escape backticks
+    value = value.replace("`", "\\`")
+    # Escape newlines
+    value = value.replace("\\n", " ")
+    # Escape double quotes
+    value = value.replace('"', '\\"')
+    # Escape single quotes
+    value = value.replace("'", "\\'")
+    return value
+
+
 # Routes
 @app.route("/")
 def index():
     """Main index page"""
-    provider = get_llm_provider(config)
+    provider = get_llm_provider(GLOBAL_CONFIG)
     return render_template("index.html", provider=provider)
+
+
+@app.route("/process", methods=["GET", "POST"])
+def process():
+    """Upload a file to the data directory"""
+
+    form = ProcessForm()
+
+    # Call the process_all method when the form is submitted
+    files = form.get_all_files(GLOBAL_CONFIG)
+    # Optionally, you can redirect or flash a message
+    return render_template("process.html", form=form, files=files)
+
+
+def process_mock():
+    i = 0
+    while True:
+        logger.info(f"Log: {i}")
+        i = i + 1
+        time.sleep(1)
+
+
+@app.route("/process_all_task", methods=["GET", "POST"])
+def process_all_task():
+    """
+    End to End Process from ingest, to create, to curate, to save-as
+    """
+    global GLOBAL_CONFIG
+    global GLOBAL_DEBUG_FLAG
+
+    if request.method == "POST":
+        if GLOBAL_CONFIG is None:
+            GLOBAL_CONFIG = reload_config()
+
+        provider = get_llm_provider(GLOBAL_CONFIG)
+        if provider not in ("vllm", "api-endpoint"):
+            flash(f"Error: LLM provider is not defined correctly", "danger")
+
+        input_str = request.data
+        input_files = json.loads(unquote(input_str))
+
+        if input_files is None or len(input_files) == 0:
+            flash(f"Error: fail to load files!", "danger")
+
+        def process_file_wrapper(file):
+            logger.info(f"Processing file: {file}")
+            content_type = "qa"
+            num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
+            process_mock()
+            # process_file(
+            #     file_path=file,
+            #     output_dir=str(DEFAULT_GENERATED_DIR),
+            #     content_type=content_type,
+            #     num_pairs=num_pairs,
+            #     provider=provider,
+            #     config_path=get_config_path(),
+            #     verbose=GLOBAL_DEBUG_FLAG,
+            # )
+            logger.info(f"Finished processing file: {file}")
+
+        for file in input_files:
+            executor.submit(process_file_wrapper, file)
+
+        return jsonify({"status": "Task initiated successfully"}), 200
+
+    elif request.method == "GET":
+
+        def log_stream():
+            while True:
+                try:
+                    message = log_queue.get_nowait()
+                    yield f"data: {message}\n\n"
+                except queue.Empty:
+                    yield "data: \n\n"
+                time.sleep(0.5)
+
+        return Response(log_stream(), mimetype="text/event-stream")
+
+    # import json
+    # from urllib.parse import unquote
+
+    # global GLOBAL_CONFIG
+    # global GLOBAL_DEBUG_FLAG
+
+    # if GLOBAL_CONFIG is None:
+    #     GLOBAL_CONFIG = reload_config()
+
+    # provider = get_llm_provider(GLOBAL_CONFIG)
+
+    # if provider not in ("vllm", "api-endpoint"):
+    #     flash(f"Error: LLM provider is not defined correctly", "danger")
+
+    # input_str = request.args.get("files")
+    # input_files = json.loads(unquote(input_str))
+
+    # if input_files is None or len(input_files) == 0:
+    #     flash(f"Error: fail to load files!", "danger")
+
+    # for file in input_files:
+    #     create_input = file
+
+    #     logger.info(f"Executing QA Pairs Creation for file: {create_input}")
+    #     content_type = "qa"
+    #     num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
+    #     create_process = process_file(
+    #         file_path=create_input,
+    #         output_dir=str(DEFAULT_GENERATED_DIR),
+    #         content_type=content_type,
+    #         num_pairs=num_pairs,
+    #         provider=provider,
+    #         config_path=get_config_path(),
+    #         verbose=GLOBAL_DEBUG_FLAG,
+    #     )
+
+    # curate_input = "./data/generated/report_qa_pairs.json"
+    # logger.info(f"Executing QA Pairs Curation for file: {curate_input}")
+    # create_process = curate(
+    #     input=curate_input,
+    #     output=output_dir,
+    #     api_base=api_base,
+    #     model=model,
+    #     verbose=verbose,
+    # )
+
+    # save_as_input = "./data/cleaned/report_qa_pairs_cleaned.json"
+    # logger.info(f"Executing QA Pairs Saving for file: {save_as_input}")
+    # save_process = save_as(input=save_as_input, format="ft", storage="json", output=output_dir)
+    # return create_process + create_process + save_process
+
+
+@app.route("/set_config", methods=["GET", "POST"])
+def set_config():
+    """Upload a file as system configuration"""
+    form = ConfigForm()
+
+    if form.validate_on_submit():
+        filename = "config.yaml"
+        filepath = DEFAULT_CONFIG_DIR / filename
+        with open(filepath, "w", encoding="utf-8") as f:
+            content = request.form.get("editor")
+            content = content.replace("\r\n", "\n")
+            f.write(content)
+        flash(f"File updated successfully: {filename}", "success")
+        # Reload the configuration after saving the file
+        reload_config()
+        return redirect(url_for("index"))
+
+    return render_template("config.html", form=form)
 
 
 @app.route("/create", methods=["GET", "POST"])
 def create():
     """Create content from text"""
     form = CreateForm()
-    provider = get_llm_provider(config)
+    provider = get_llm_provider(GLOBAL_CONFIG)
 
     if form.validate_on_submit():
         try:
@@ -180,7 +445,7 @@ def create():
 def curate():
     """Curate QA pairs interface"""
     form = CurateForm()
-    provider = get_llm_provider(config)
+    provider = get_llm_provider(GLOBAL_CONFIG)
 
     if form.validate_on_submit():
         try:
@@ -299,7 +564,7 @@ def view_file(file_path):
             is_cot_examples = False
             has_conversations = False
             has_summary = False
-    elif full_path.suffix.lower() == '':    
+    elif full_path.suffix.lower() == "":
         # it is a directory
         file_content = [
             str(f.relative_to(DEFAULT_DATA_DIR.parent))
@@ -310,7 +575,7 @@ def view_file(file_path):
         is_cot_examples = False
         has_conversations = False
         has_summary = False
-    else :
+    else:
         # Read as text
         with open(full_path, "r", encoding="utf-8") as f:
             file_content = f.read()
@@ -375,7 +640,10 @@ def ingest():
 
             # Process the file or URL
             output_path = ingest_process_file(
-                file_path=input_path, output_dir=output_dir, output_name=output_name, config=config
+                file_path=input_path,
+                output_dir=output_dir,
+                output_name=output_name,
+                config=GLOBAL_CONFIG,
             )
 
             # Clean up temporary file if it was an upload
@@ -413,7 +681,7 @@ def ingest():
 def save():
     """Ingest and parse documents"""
     form = SaveAsForm()
-    provider = get_llm_provider(config)
+    provider = get_llm_provider(GLOBAL_CONFIG)
 
     if form.validate_on_submit():
         try:
@@ -447,8 +715,7 @@ def save():
             for f in DEFAULT_GENERATED_DIR.glob("*.json")
         ]
         json_files.extend(
-            str(f.relative_to(DEFAULT_DATA_DIR.parent)) 
-            for f in DEFAULT_CURATED_DIR.glob("*.json")
+            str(f.relative_to(DEFAULT_DATA_DIR.parent)) for f in DEFAULT_CURATED_DIR.glob("*.json")
         )
 
     return render_template("save.html", form=form, provider=provider, json_files=json_files)
@@ -587,6 +854,7 @@ def delete_item(file_path):
 
 def run_server(host="127.0.0.1", port=5000, debug=False):
     """Run the Flask server"""
+    reload_setup(debug)
     logger.info(f"Run the Flask server: {host}:{port}")
     logger.info(f"Mode: {("debug" if debug else "production") }")
     app.run(host=host, port=port, debug=debug)

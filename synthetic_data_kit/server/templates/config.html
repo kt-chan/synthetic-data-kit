@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}System Configuration{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>Configuration File Editor</h2>
+            </div>
+            <div class="card-body">
+                <div id="editor" style="height: 600px; width: 100%;"></div>
+            </div>
+            <div class="card-footer text-end">
+                <form id="updateForm" method="POST" action="{{ url_for('set_config') }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="editor" id="editorContent" value="">
+                    <button type="submit" id="reset" class="btn btn-secondary btn-sm">Reset Default</button>
+                    <button type="submit" id="update" class="btn btn-primary btn-sm">Update File</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-noconflict/ace.js"></script> -->
+<script src="{{ url_for('static', filename='js/ace.js') }}"></script>
+
+<script>
+    // Initialize the Ace Editor
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/yaml");
+
+    // Load the YAML content into the editor
+    var initialContent = `{{ form.editor.data | escape_js | safe }}`;
+    var defaultContent = `{{ form.editor.default | escape_js | safe }}`;
+    editor.setValue(initialContent, -1); // -1 to move the cursor to the end
+
+    // Event listener for the Reset button
+    document.getElementById('reset').addEventListener('click', function (event) {
+        event.preventDefault();
+        editor.setValue(defaultContent, -1); // Reset the editor content to default
+    });
+
+    // Event listener for the Update button
+    document.getElementById('update').addEventListener('click', function (event) {
+        event.preventDefault();
+        var updatedContent = editor.getValue();
+        document.getElementById('editorContent').value = updatedContent;
+        document.getElementById('updateForm').submit();
+    });
+</script>
+{% endblock %}
