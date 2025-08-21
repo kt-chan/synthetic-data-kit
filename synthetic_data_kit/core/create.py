@@ -13,10 +13,13 @@ from synthetic_data_kit.models.llm_client import LLMClient
 from synthetic_data_kit.generators.qa_generator import QAGenerator
 from synthetic_data_kit.generators.vqa_generator import VQAGenerator
 from synthetic_data_kit.utils.config import get_generation_config
+from synthetic_data_kit.utils.AppLogger import get_logger
+
+logger = get_logger(__name__)
 
 def read_json(file_path):
     # Read the file
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         document_text = f.read()
     return document_text
 
@@ -33,7 +36,7 @@ def process_file(
     provider: Optional[str] = None,
 ) -> str:
     """Process a file to generate content
-    
+
     Args:
         file_path: Path to the text file to process
         output_dir: Directory to save generated content
@@ -43,136 +46,135 @@ def process_file(
         content_type: Type of content to generate (qa, summary, cot)
         num_pairs: Target number of QA pairs to generate
         threshold: Quality threshold for filtering (1-10)
-    
+
     Returns:
         Path to the output file
     """
     # Create output directory if it doesn't exist
     # The reason for having this directory logic for now is explained in context.py
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # Initialize LLM client
     client = LLMClient(
-        config_path=config_path,
-        provider=provider,
-        api_base=api_base,
-        model_name=model
+        config_path=config_path, provider=provider, api_base=api_base, model_name=model
     )
-    
-    # Debug: Print which provider is being used
-    print(f"L Using {client.provider} provider")
-    
+
+    # Debug: logger.info which provider is being used
+    logger.info(f"Using {client.provider} provider")
+
     # Generate base filename for output
     base_name = os.path.splitext(os.path.basename(file_path))[0]
-    
+
     # Generate content based on type
     if content_type == "qa":
         generator = QAGenerator(client, config_path)
 
         document_text = read_json(file_path)
-        
+
         # Get num_pairs from args or config
         if num_pairs is None:
             config = client.config
             generation_config = get_generation_config(config)
             num_pairs = generation_config.get("num_pairs", 25)
-        
+
         # Process document
         result = generator.process_document(
             document_text,
             num_pairs=num_pairs,
-            fileName = file_path, 
+            fileName=file_path,
             verbose=verbose,
         )
-        
+
         # Save output
         output_path = os.path.join(output_dir, f"{base_name}_qa_pairs.json")
-        print(f"Saving result to {output_path}")
-        
+        logger.info(f"Saving result to {output_path}")
+
         # First, let's save a basic test file to confirm the directory is writable
         test_path = os.path.join(output_dir, "test_write.json")
         try:
-            with open(test_path, 'w', encoding='utf-8') as f:
+            with open(test_path, "w", encoding="utf-8") as f:
                 f.write('{"test": "data"}')
-            print(f"Successfully wrote test file to {test_path}")
+            logger.info(f"Successfully wrote test file to {test_path}")
         except Exception as e:
-            print(f"Error writing test file: {e}")
-            
+            logger.info(f"Error writing test file: {e}")
+
         # Now save the actual result
         try:
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2)
-            print(f"Successfully wrote result to {output_path}")
+            logger.info(f"Successfully wrote result to {output_path}")
         except Exception as e:
-            print(f"Error writing result file: {e}")
-        
+            logger.info(f"Error writing result file: {e}")
+
         return output_path
-    
+
     elif content_type == "summary":
         generator = QAGenerator(client, config_path)
 
         document_text = read_json(file_path)
-        
+
         # Generate just the summary
         summary = generator.generate_summary(document_text)
-        
+
         # Save output
         output_path = os.path.join(output_dir, f"{base_name}_summary.json")
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump({"summary": summary}, f, indent=2)
-        
+
         return output_path
-    
+
     # So there are two separate categories of CoT
     # Simply CoT maps to "Hey I want CoT being generated"
     # CoT-enhance maps to "Please enhance my dataset with CoT"
-    
+
     elif content_type == "cot":
         from synthetic_data_kit.generators.cot_generator import COTGenerator
-        
+
         # Initialize the CoT generator
         generator = COTGenerator(client, config_path)
 
         document_text = read_json(file_path)
-        
+
         # Get num_examples from args or config
         if num_pairs is None:
             config = client.config
             generation_config = get_generation_config(config)
             num_pairs = generation_config.get("num_cot_examples", 5)
-        
+
         # Process document to generate CoT examples
         result = generator.process_document(
             document_text,
             num_examples=num_pairs,
-            include_simple_steps=verbose  # More detailed if verbose is enabled
+            include_simple_steps=verbose,  # More detailed if verbose is enabled
         )
-        
+
         # Save output
         output_path = os.path.join(output_dir, f"{base_name}_cot_examples.json")
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
-        
+
         if verbose:
-            # Print some example content
+            # logger.info some example content
             if result.get("cot_examples") and len(result.get("cot_examples", [])) > 0:
                 first_example = result["cot_examples"][0]
-                print("\nFirst CoT Example:")
-                print(f"Question: {first_example.get('question', '')}")
-                print(f"Reasoning (first 100 chars): {first_example.get('reasoning', '')[:100]}...")
-                print(f"Answer: {first_example.get('answer', '')}")
-        
+                logger.info("\nFirst CoT Example:")
+                logger.info(f"Question: {first_example.get('question', '')}")
+                logger.info(
+                    f"Reasoning (first 100 chars): {first_example.get('reasoning', '')[:100]}..."
+                )
+                logger.info(f"Answer: {first_example.get('answer', '')}")
+
         return output_path
-        
+
     elif content_type == "cot-enhance":
         from synthetic_data_kit.generators.cot_generator import COTGenerator
         from tqdm import tqdm
-        
+
         # Initialize the CoT generator
         generator = COTGenerator(client, config_path)
 
         document_text = read_json(file_path)
-        
+
         # Get max_examples from args or config
         max_examples = None
         if num_pairs is not None:
@@ -182,22 +184,22 @@ def process_file(
             generation_config = get_generation_config(config)
             # Get the config value (will be None by default, meaning enhance all)
             max_examples = generation_config.get("num_cot_enhance_examples")
-        
+
         # Instead of parsing as text, load the file as JSON with conversations
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             # Handle different dataset formats
             # First, check for QA pairs format (the most common input format)
             if isinstance(data, dict) and "qa_pairs" in data:
                 # QA pairs format from "create qa" command (make this the primary format)
                 from synthetic_data_kit.utils.llm_processing import convert_to_conversation_format
-                
+
                 qa_pairs = data.get("qa_pairs", [])
                 if verbose:
-                    print(f"Converting {len(qa_pairs)} QA pairs to conversation format")
-                
+                    logger.info(f"Converting {len(qa_pairs)} QA pairs to conversation format")
+
                 conv_list = convert_to_conversation_format(qa_pairs)
                 # Wrap each conversation in the expected format
                 conversations = [{"conversations": conv} for conv in conv_list]
@@ -207,11 +209,15 @@ def process_file(
                 # Single conversation with a conversations array
                 conversations = [data]
                 is_single_conversation = True
-            elif isinstance(data, list) and all("conversations" in item for item in data if isinstance(item, dict)):
+            elif isinstance(data, list) and all(
+                "conversations" in item for item in data if isinstance(item, dict)
+            ):
                 # Array of conversation objects, each with a conversations array
                 conversations = data
                 is_single_conversation = False
-            elif isinstance(data, list) and all(isinstance(msg, dict) and "from" in msg for msg in data):
+            elif isinstance(data, list) and all(
+                isinstance(msg, dict) and "from" in msg for msg in data
+            ):
                 # Direct list of messages for a single conversation
                 conversations = [{"conversations": data}]
                 is_single_conversation = True
@@ -219,46 +225,54 @@ def process_file(
                 # Try to handle as a generic list of conversations
                 conversations = data
                 is_single_conversation = False
-            
+
             # Limit the number of conversations if needed
             if max_examples is not None and len(conversations) > max_examples:
                 if verbose:
-                    print(f"Limiting to {max_examples} conversations (from {len(conversations)} total)")
+                    logger.info(
+                        f"Limiting to {max_examples} conversations (from {len(conversations)} total)"
+                    )
                 conversations = conversations[:max_examples]
-            
+
             if verbose:
-                print(f"Found {len(conversations)} conversation(s) to enhance")
-            
+                logger.info(f"Found {len(conversations)} conversation(s) to enhance")
+
             # Process each conversation
             enhanced_conversations = []
-            
+
             for i, conversation in enumerate(tqdm(conversations, desc="Enhancing conversations")):
                 # Check if this item has a conversations field
                 if isinstance(conversation, dict) and "conversations" in conversation:
                     conv_messages = conversation["conversations"]
-                    
+
                     # Validate messages format
                     if not isinstance(conv_messages, list):
-                        print(f"Warning: conversations field is not a list in item {i}, skipping")
+                        logger.info(
+                            f"Warning: conversations field is not a list in item {i}, skipping"
+                        )
                         enhanced_conversations.append(conversation)  # Keep original
                         continue
-                    
+
                     # Enhance this conversation's messages
                     if verbose:
-                        print(f"Debug - Conv_messages type: {type(conv_messages)}")
-                        print(f"Debug - Conv_messages structure: {conv_messages[:1] if isinstance(conv_messages, list) else 'Not a list'}")
-                    
+                        logger.info(f"Debug - Conv_messages type: {type(conv_messages)}")
+                        logger.info(
+                            f"Debug - Conv_messages structure: {conv_messages[:1] if isinstance(conv_messages, list) else 'Not a list'}"
+                        )
+
                     # Always include simple steps when enhancing QA pairs
-                    enhanced_messages = generator.enhance_with_cot(conv_messages, include_simple_steps=True)
-                    
+                    enhanced_messages = generator.enhance_with_cot(
+                        conv_messages, include_simple_steps=True
+                    )
+
                     # Handle nested bug
                     if enhanced_messages and isinstance(enhanced_messages, list):
                         # Nested bug
                         if enhanced_messages and isinstance(enhanced_messages[0], list):
                             if verbose:
-                                print(f"Debug - Flattening nested array response")
+                                logger.info(f"Debug - Flattening nested array response")
                             enhanced_messages = enhanced_messages[0]
-                    
+
                     # Create enhanced conversation with same structure
                     enhanced_conv = conversation.copy()
                     enhanced_conv["conversations"] = enhanced_messages
@@ -266,37 +280,36 @@ def process_file(
                 else:
                     # Not the expected format, just keep original
                     enhanced_conversations.append(conversation)
-            
+
             # Save enhanced conversations
             output_path = os.path.join(output_dir, f"{base_name}_enhanced.json")
-            
-            with open(output_path, 'w', encoding='utf-8') as f:
+
+            with open(output_path, "w", encoding="utf-8") as f:
                 if is_single_conversation and len(enhanced_conversations) == 1:
                     # Save the single conversation
                     json.dump(enhanced_conversations[0], f, indent=2)
                 else:
                     # Save the array of conversations
                     json.dump(enhanced_conversations, f, indent=2)
-            
+
             if verbose:
-                print(f"Enhanced {len(enhanced_conversations)} conversation(s)")
-                
+                logger.info(f"Enhanced {len(enhanced_conversations)} conversation(s)")
+
             return output_path
-            
+
         except json.JSONDecodeError:
-            raise ValueError(f"Failed to parse {file_path} as JSON. For cot-enhance, input must be a valid JSON file.")
+            raise ValueError(
+                f"Failed to parse {file_path} as JSON. For cot-enhance, input must be a valid JSON file."
+            )
     elif content_type == "vqa_add_reasoning":
         # Initialize the VQA generator
         generator = VQAGenerator(client, config_path)
-        
+
         # Process the dataset
         output_path = generator.process_dataset(
-            dataset_source=file_path,
-            output_dir=output_dir,
-            num_examples=num_pairs,
-            verbose=verbose
+            dataset_source=file_path, output_dir=output_dir, num_examples=num_pairs, verbose=verbose
         )
-        
+
         return output_path
 
     else:

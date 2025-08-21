@@ -34,7 +34,7 @@ from synthetic_data_kit.core.save_as import convert_format
 from synthetic_data_kit.core.ingest import process_file as ingest_process_file
 
 # Set up logging
-from synthetic_data_kit.utils.AppLogger import get_logger, setup_logging, add_sse_queue, remove_sse_queue
+from synthetic_data_kit.utils.AppLogger import setup_logging, get_logger, log_function_call
 
 GLOBAL_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GLOBAL_DEBUG_FLAG = False
@@ -86,15 +86,10 @@ def reload_setup(debug=False):
         GLOBAL_LOG_LEVEL = logging.DEBUG
 
     # Initialize logger with SSE enabled
-    # logger = setup_logging(
-    #     log_file=str((DEFAULT_LOG_DIR / "app.log").resolve()),
-    #     log_level=GLOBAL_LOG_LEVEL,
-    #     enable_sse=True,
-    # )
     logger = setup_logging(
         log_file=str((DEFAULT_LOG_DIR / "app.log").resolve()),
         log_level=GLOBAL_LOG_LEVEL,
-        enable_sse=True
+        enable_sse=True,
     )
 
 
@@ -259,7 +254,6 @@ def process_all_task():
 
     try:
         task_files = request.get_json()
-        logger.info(f"Starting to process {len(task_files)} files")
         task_running = True
         task_complete = False
 
@@ -278,7 +272,7 @@ def process_all_task():
 def stream_task_log():
     # Create a new queue for this client
     log_queue = queue.Queue()
-    add_sse_queue(log_queue)
+    logger.add_sse_queue(log_queue)
 
     def generate():
         try:
@@ -294,11 +288,11 @@ def stream_task_log():
 
                     # Check if task is complete
                     if task_complete:
-                        yield 'data: {"message": "Task completed", "level": "INFO"}\n\n'
+                        yield 'data: {"message": "Task completed"}\n\n'
                         break
         except GeneratorExit:
             # Client disconnected, remove the queue
-            remove_sse_queue(log_queue)
+            logger.remove_sse_queue(log_queue)
 
     return Response(generate(), mimetype="text/event-stream")
 
@@ -306,36 +300,15 @@ def stream_task_log():
 def process_files(files):
     """Background task to process files"""
     global task_running, task_complete
-    global GLOBAL_CONFIG
-    global GLOBAL_DEBUG_FLAG
 
-    if GLOBAL_CONFIG is None:
-        GLOBAL_CONFIG = reload_config()
-
-    provider = get_llm_provider(GLOBAL_CONFIG)
-    if provider not in ("vllm", "api-endpoint"):
-        flash(f"Error: LLM provider is not defined correctly", "danger")
-    time.sleep(2)
-    
     try:
         logger.info(f"Starting to process {len(files)} files")
-        for i in range(5):
-            logger.info(f"Round {i}")
-            for file in files:
-                logger.info(f"Processing file {i+1}/{len(files)}: {file}")
-                # Simulate processing time with different log levels
-                time.sleep(1)
-                content_type = "qa"
-                num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
-                process_file(
-                    file_path=file,
-                    output_dir=str(DEFAULT_GENERATED_DIR),
-                    content_type=content_type,
-                    num_pairs=num_pairs,
-                    provider=provider,
-                    config_path=get_config_path(),
-                    verbose=GLOBAL_DEBUG_FLAG,
-                )
+
+        for i, file in enumerate(files):
+            logger.info(f"Processing file {i+1}/{len(files)}: {file}")
+            # Simulate processing time
+            time.sleep(1)
+
         logger.info("All files processed successfully")
     except Exception as e:
         logger.error(f"Error processing files: {e}")

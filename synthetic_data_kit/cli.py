@@ -233,7 +233,7 @@ def create(
 
     # Check the LLM provider from config
     provider = get_llm_provider(ctx.config)
-    console.print(f"L Using {provider} provider", style="green")
+    console.print(f"Using {provider} provider", style="green")
     if provider == "api-endpoint":
         # Use API endpoint config
         api_endpoint_config = get_openai_config(ctx.config)

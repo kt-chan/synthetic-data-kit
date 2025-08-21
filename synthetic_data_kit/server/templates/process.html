@@ -81,7 +81,7 @@
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
 
-                const eventSource = new EventSource('/process_all_task');
+                const eventSource = new EventSource('/stream_task_log');
                 eventSource.onmessage = function (event) {
                     event_data = event.data
                     console.info('EventSource success:', event_data);
@@ -91,7 +91,7 @@
                 };
                 eventSource.onerror = function (error) {
                     console.error('EventSource failed:', error);
-                    alert('An error occurred while initializing the log stream.');
+                    // alert('An error occurred while initializing the log stream.');
                 };
 
                 window.addEventListener('beforeunload', function () {
