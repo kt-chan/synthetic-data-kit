@@ -2,9 +2,9 @@ import json
 import logging
 import queue
 import threading
+from logging.handlers import RotatingFileHandler
 from typing import Optional
 
-# Create a queue manager for SSE log messages
 class SSEQueueManager:
     def __init__(self):
         self.queues = set()
@@ -21,36 +21,38 @@ class SSEQueueManager:
     
     def broadcast_message(self, message):
         with self.lock:
-            for q in list(self.queues):  # Create a copy to avoid issues during iteration
+            queues_copy = list(self.queues)
+            for q in queues_copy:
                 try:
                     q.put(message)
                 except:
-                    # Remove queue if it's no longer valid
                     self.queues.discard(q)
 
-# Custom logging handler that sends messages to SSE clients
 class SSEHandler(logging.Handler):
-    def __init__(self, queue_manager):
+    def __init__(self, queue_manager, maxsize=1000):
         super().__init__()
         self.queue_manager = queue_manager
+        self.maxsize = maxsize
     
     def emit(self, record):
         try:
-            # Format the log record in the standard format
             formatted_message = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s').format(record)
-            
-            # Create JSON with the formatted message
             log_data = formatted_message
             msg = json.dumps(log_data)
+            
+            log_queue = queue.Queue(maxsize=self.maxsize)
+            try:
+                log_queue.put_nowait(msg)
+            except queue.Full:
+                logging.error("Log queue overflow, dropping message")
+                
             self.queue_manager.broadcast_message(msg)
         except Exception:
             self.handleError(record)
 
-# Global SSE queue manager instance
 _sse_queue_manager = None
 
 def get_sse_queue_manager():
-    """Get or create the global SSE queue manager"""
     global _sse_queue_manager
     if _sse_queue_manager is None:
         _sse_queue_manager = SSEQueueManager()
@@ -58,96 +60,58 @@ def get_sse_queue_manager():
 
 def setup_logging(log_file: Optional[str] = None, 
                  log_level: int = logging.INFO, 
-                 enable_sse: bool = False) -> logging.Logger:
-    """
-    Set up logging with SSE capability
-    
-    Args:
-        log_file: Path to log file (optional)
-        log_level: Logging level
-        enable_sse: Whether to enable SSE broadcasting
-    
-    Returns:
-        Root logger instance
-    """
-    # Create a queue manager for SSE if enabled
+                 enable_sse: bool = False,
+                 enable_rotation: bool = False,
+                 max_bytes: int = 10000000,
+                 backup_count: int = 7) -> logging.Logger:
     sse_queue_manager = get_sse_queue_manager() if enable_sse else None
     
-    # Get root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
     
-    # Remove any existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
     
-    # Create standard formatter
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     formatter = logging.Formatter(log_format)
     
-    # Add console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
     
-    # Add file handler if specified
     if log_file:
-        file_handler = logging.FileHandler(log_file)
+        if enable_rotation:
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=max_bytes,
+                backupCount=backup_count,
+                when='midnight'
+            )
+        else:
+            file_handler = logging.FileHandler(log_file)
+        
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
     
-    # Add SSE handler if enabled
     if enable_sse and sse_queue_manager:
         sse_handler = SSEHandler(sse_queue_manager)
-        # Use the same formatter for consistency
         sse_handler.setFormatter(formatter)
         root_logger.addHandler(sse_handler)
     
     return root_logger
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Get a logger with the specified name
-    
-    Args:
-        name: Name of the logger (typically __name__)
-    
-    Returns:
-        Logger instance
-    """
     return logging.getLogger(name)
 
 def add_sse_queue(log_queue: queue.Queue) -> None:
-    """
-    Add a queue to the SSE queue manager for broadcasting
-    
-    Args:
-        log_queue: Queue to add for SSE broadcasting
-    """
     sse_queue_manager = get_sse_queue_manager()
     sse_queue_manager.add_queue(log_queue)
 
 def remove_sse_queue(log_queue: queue.Queue) -> None:
-    """
-    Remove a queue from the SSE queue manager
-    
-    Args:
-        log_queue: Queue to remove from SSE broadcasting
-    """
     sse_queue_manager = get_sse_queue_manager()
     sse_queue_manager.remove_queue(log_queue)
 
-# Function decorator for logging function calls
 def log_function_call(logger: logging.Logger):
-    """
-    Decorator to log function calls with arguments and return values
-    
-    Args:
-        logger: Logger instance to use for logging
-    
-    Returns:
-        Decorator function
-    """
     def decorator(func):
         def wrapper(*args, **kwargs):
             logger.debug(f"Calling {func.__name__} with args: {args}, kwargs: {kwargs}")

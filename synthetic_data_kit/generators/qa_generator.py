@@ -28,11 +28,9 @@ from synthetic_data_kit.utils.config import (
     get_rag_config,
     get_prompt,
 )
-import logging
+from synthetic_data_kit.utils.app_logger import get_logger
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class QAGenerator:
@@ -148,9 +146,10 @@ class QAGenerator:
                 total_batches = (len(prompt_messages) + batch_size - 1) // batch_size
 
                 # Simple progress indicator for non-verbose mode
-                logger.info(
-                    f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
-                )
+                if total_batches > 1:
+                    logger.info(
+                        f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
+                    )
 
                 while retry_count < max_retries:
                     try:
@@ -423,10 +422,11 @@ class QAGenerator:
             total_batches = (len(all_messages) + batch_size - 1) // batch_size
 
             # Simple progress indicator for non-verbose mode
-            logger.info(
-                f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each..."
-            )
-
+            if total_batches > 1:
+                logger.info(
+                    f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
+                )
+                
             try:
                 # Process the batch
                 batch_responses = self.client.batch_completion(
@@ -571,11 +571,6 @@ class QAGenerator:
             os.environ["SDK_VERBOSE"] = "true"
         else:
             os.environ["SDK_VERBOSE"] = "false"
-
-        # For Debug Only
-        if self.enable_rag:
-            ragClient = RAGProccesor(self.client, self.config_path)
-            ragClient.truncate()
 
         # Generate summary
         summary = self.generate_summary(document_text, fileName=fileName)

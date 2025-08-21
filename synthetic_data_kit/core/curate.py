@@ -14,12 +14,9 @@ from synthetic_data_kit.models.llm_client import LLMClient
 from synthetic_data_kit.generators.qa_curator import QACurator
 from synthetic_data_kit.utils.config import get_curate_config, get_prompt, get_rag_config
 from synthetic_data_kit.utils.llm_processing import convert_to_conversation_format, parse_ratings
-import logging
+from synthetic_data_kit.utils.app_logger import get_logger
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = get_logger(__name__)
 
 def curate_qa_pairs(
     input_path: str,
@@ -28,8 +25,8 @@ def curate_qa_pairs(
     api_base: Optional[str] = None,
     model: Optional[str] = None,
     config_path: Optional[Path] = None,
-    verbose: bool = False,
     provider: Optional[str] = None,
+    verbose: Optional[bool] = False
 ) -> str:
     """Clean and filter QA pairs based on quality ratings
 
@@ -211,6 +208,7 @@ def curate_qa_pairs(
     metrics = {
         "total": len(batches),
         "filtered": len(total_filtered_pairs),
+        "evalutated": total_evaluated,
         "retention_rate": round(len(total_filtered_pairs) / len(batches), 2) if batches else 0,
         "avg_score": round(total_score / total_evaluated, 1) if total_evaluated else 0,
     }
@@ -232,11 +230,14 @@ def curate_qa_pairs(
         "metrics": metrics,
     }
 
-    # Ensure output directory exists
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    # Save result
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2)
+    try:
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2)
+    except PermissionError as e:
+        print(f"Permission denied: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
     return output_path

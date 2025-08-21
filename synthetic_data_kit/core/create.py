@@ -13,7 +13,7 @@ from synthetic_data_kit.models.llm_client import LLMClient
 from synthetic_data_kit.generators.qa_generator import QAGenerator
 from synthetic_data_kit.generators.vqa_generator import VQAGenerator
 from synthetic_data_kit.utils.config import get_generation_config
-from synthetic_data_kit.utils.AppLogger import get_logger
+from synthetic_data_kit.utils.app_logger import get_logger
 
 logger = get_logger(__name__)
 

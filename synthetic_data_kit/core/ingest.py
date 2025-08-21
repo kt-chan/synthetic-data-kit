@@ -5,13 +5,11 @@
 # the root directory of this source tree.
 # Ingest different file formats
 
-import os
-import sys
-from pathlib import Path
+import os, sys
 from typing import Optional, Dict, Any
-import importlib
+from synthetic_data_kit.utils.app_logger import get_logger
 
-from synthetic_data_kit.utils.config import get_path_config
+logger = get_logger(__name__)
 
 def determine_parser(file_path: str, config: Dict[str, Any]):
     """Determine the appropriate parser for a file or URL"""
@@ -68,6 +66,7 @@ def process_file(
     Returns:
         Path to the output file
     """
+    logger.info(f"Ingest task started for file: {file_path}")
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -104,5 +103,5 @@ def process_file(
     # Save the content
     output_path = os.path.join(output_dir, output_name)
     parser.save(content, output_path)
-    
+    logger.info(f"Ingest task completed: saved file: {output_path}")
     return output_path

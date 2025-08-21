@@ -10,32 +10,50 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-from synthetic_data_kit.utils.format_converter import to_jsonl, to_alpaca, to_fine_tuning, to_chatml, to_hf_dataset
+from synthetic_data_kit.utils.format_converter import (
+    to_jsonl,
+    to_alpaca,
+    to_fine_tuning,
+    to_chatml,
+    to_hf_dataset,
+)
 from synthetic_data_kit.utils.llm_processing import convert_to_conversation_format
+from synthetic_data_kit.utils.app_logger import get_logger
+from synthetic_data_kit.utils.config import (
+    load_config,
+    get_llm_provider,
+    get_config_path,
+    get_path_config,
+)
+logger = get_logger(__name__)
+
 
 def convert_format(
     input_path: str,
     output_path: str,
     format_type: str,
-    config: Optional[Dict[str, Any]] = None,
     storage_format: str = "json",
+    config_path: Optional[Dict[str, Any]] = None,
+    verbose: Optional[bool] = False
 ) -> str:
     """Convert data to different formats
-    
+
     Args:
         input_path: Path to the input file
         output_path: Path to save the output
         format_type: Output format (jsonl, alpaca, ft, chatml)
-        config: Configuration dictionary
+        config_path: Configuration dictionary
         storage_format: Storage format, either "json" or "hf" (Hugging Face dataset)
-    
+
     Returns:
         Path to the output file or directory
     """
-    # Load input file
-    with open(input_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+    logger.info(f"Save task started for file: {input_path}")
     
+    # Load input file
+    with open(input_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
     # Extract data based on known structures
     # Try to handle the case where we have QA pairs or conversations
     if "qa_pairs" in data:
@@ -46,11 +64,8 @@ def convert_format(
         conversations = data.get("conversations", [])
         qa_pairs = []
         for conv in conversations:
-            if len(conv) >= 3 and conv[1]['role'] == 'user' and conv[2]['role'] == 'assistant':
-                qa_pairs.append({
-                    'question': conv[1]['content'],
-                    'answer': conv[2]['content']
-                })
+            if len(conv) >= 3 and conv[1]["role"] == "user" and conv[2]["role"] == "assistant":
+                qa_pairs.append({"question": conv[1]["content"], "answer": conv[2]["content"]})
     else:
         # If the file is just an array of objects, check if they look like QA pairs
         if isinstance(data, list):
@@ -60,10 +75,10 @@ def convert_format(
                     qa_pairs.append(item)
         else:
             raise ValueError("Unrecognized data format - expected QA pairs or conversations")
-    
+
     # Ensure output directory exists
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
+
     # When using HF dataset storage format
     if storage_format == "hf":
         # For HF datasets, we need to prepare the data in the right structure
@@ -74,39 +89,42 @@ def convert_format(
             # Format as Alpaca structure
             formatted_pairs = []
             for pair in qa_pairs:
-                formatted_pairs.append({
-                    "instruction": pair["question"],
-                    "input": "",
-                    "output": pair["answer"]
-                })
+                formatted_pairs.append(
+                    {"instruction": pair["question"], "input": "", "output": pair["answer"]}
+                )
         elif format_type == "ft":
             # Format as OpenAI fine-tuning structure
             formatted_pairs = []
             for pair in qa_pairs:
-                formatted_pairs.append({
-                    "messages": [
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": pair["question"]},
-                        {"role": "assistant", "content": pair["answer"]}
-                    ]
-                })
+                formatted_pairs.append(
+                    {
+                        "messages": [
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": pair["question"]},
+                            {"role": "assistant", "content": pair["answer"]},
+                        ]
+                    }
+                )
         elif format_type == "chatml":
             # Format as ChatML structure
             formatted_pairs = []
             for pair in qa_pairs:
-                formatted_pairs.append({
-                    "messages": [
-                        {"role": "system", "content": "You are a helpful AI assistant."},
-                        {"role": "user", "content": pair["question"]},
-                        {"role": "assistant", "content": pair["answer"]}
-                    ]
-                })
+                formatted_pairs.append(
+                    {
+                        "messages": [
+                            {"role": "system", "content": "You are a helpful AI assistant."},
+                            {"role": "user", "content": pair["question"]},
+                            {"role": "assistant", "content": pair["answer"]},
+                        ]
+                    }
+                )
         else:
             raise ValueError(f"Unknown format type: {format_type}")
-            
+
+        logger.info(f"Geneate SFT task completed: saved file: {output_path}")
         # Save as HF dataset (Arrow format)
         return to_hf_dataset(formatted_pairs, output_path)
-    
+
     # Standard JSON file storage format
     else:
         # Convert to the requested format using existing functions

@@ -28,11 +28,9 @@ from synthetic_data_kit.utils.config import (
     get_rag_config,
     get_prompt,
 )
-import logging
+from synthetic_data_kit.utils.app_logger import get_logger
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class QACurator:
@@ -78,10 +76,14 @@ class QACurator:
                     messages, temperature=self.rating_temperature, batch_size=self.inference_batch
                 )
                 if len(batch_responses) > 0:
-                    logger.debug(f"Curate_process Batch_completion completed successfully with response: {batch_responses}")
+                    logger.debug(
+                        f"Curate_process Batch_completion completed successfully with response: {batch_responses}"
+                    )
                     break
             except Exception as e:
-                logger.error(f"batch_completion attempt failed for {i}/{max_tries}, with error: {e}")
+                logger.error(
+                    f"batch_completion attempt failed for {i}/{max_tries}, with error: {e}"
+                )
 
         filtered_pairs = []
         unfiltered_pairs = []
@@ -150,7 +152,7 @@ class QACurator:
 
         try:
             response = ragClient.enrichQAPair(qa_pairs, max_chars=self.max_input_chars)
-            if response is not None and len(response) > 0 :
+            if response is not None and len(response) > 0:
                 qa_pairs = response
         except Exception as e:
             logger.error(f"Exception occurred during QA enrichment: {e}")

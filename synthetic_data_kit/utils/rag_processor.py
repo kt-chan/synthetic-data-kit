@@ -19,11 +19,10 @@ from synthetic_data_kit.utils.config import (
 from sentence_transformers import SentenceTransformer, util
 from rank_bm25 import BM25Okapi
 import numpy as np
-import logging
+from synthetic_data_kit.utils.app_logger import get_logger
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+
 
 
 class RAGProccesor:

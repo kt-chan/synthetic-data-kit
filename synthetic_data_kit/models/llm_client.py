@@ -24,10 +24,9 @@ from synthetic_data_kit.utils.config import (
 import threading
 import requests
 from requests.adapters import HTTPAdapter, Retry
+from synthetic_data_kit.utils.app_logger import get_logger
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # Try to import OpenAI, but handle case where it's not installed
 try:
@@ -829,15 +828,14 @@ class LLMClient:
         """Send request with connection pooling and error handling"""
         session = self.get_session()
         try:
-            if verbose:
-                logger.info(f"Sending request to vLLM model {self.model}...")
+            
+            logger.debug(f"Sending request to vLLM model {self.model}...")
 
             response = session.post(
                 f"{self.api_base}/chat/completions", json=request_data, timeout=60
             )
 
-            if verbose:
-                logger.info(f"Received status {response.status_code}")
+            logger.debug(f"Received status {response.status_code}")
             response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"]
 

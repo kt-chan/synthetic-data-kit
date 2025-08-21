@@ -5,8 +5,7 @@
 # the root directory of this source tree.
 # CLI Logic for synthetic-data-kit
 
-import os
-import typer
+import os, typer, logging
 from pathlib import Path
 from typing import Optional
 import requests
@@ -18,16 +17,16 @@ from synthetic_data_kit.utils.config import (
     get_vllm_config,
     get_openai_config,
     get_llm_provider,
+    get_config_path,
     get_path_config,
 )
 from synthetic_data_kit.core.context import AppContext
 from synthetic_data_kit.server.app import run_server
-import logging
+from synthetic_data_kit.utils.app_logger import setup_logging
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = None
 
+DEFAULT_LOG_DIR = Path(__file__).parents[1] / "logs"
 
 # Initialize Typer app
 app = typer.Typer(
@@ -340,14 +339,14 @@ def curate(
     try:
         with console.status(f"Cleaning content from {input}..."):
             result_path = curate_qa_pairs(
-                input,
-                output,
-                threshold,
-                api_base,
-                model,
-                ctx.config_path,
-                verbose,
+                input_path=input,
+                output_path=output,
+                threshold=threshold,
+                api_base=api_base,
+                model=model,
+                config_path=get_config_path(),
                 provider=provider,  # Pass the provider parameter
+                verbose=verbose
             )
         console.print(f" Cleaned content saved to [bold]{result_path}[/bold]", style="green")
         return 0
@@ -401,7 +400,13 @@ def save_as(
 
     try:
         with console.status(f"Converting {input} to {format} format with {storage} storage..."):
-            output_path = convert_format(input, output, format, ctx.config, storage_format=storage)
+            output_path = convert_format(
+                input_path=input,
+                output_path=output,
+                format_type=format,
+                storage_format=storage,
+                config_path=get_config_path(),
+            )
 
         if storage == "hf":
             console.print(
@@ -465,21 +470,12 @@ def process(
     curate_input = "./data/generated/report_qa_pairs.json"
     logger.info(f"Executing QA Pairs Curation for file: {curate_input}")
     create_process = curate(
-        input=curate_input, 
-        output=output_dir, 
-        api_base=api_base,
-        model=model, 
-        verbose=verbose
+        input=curate_input, output=output_dir, api_base=api_base, model=model, verbose=verbose
     )
 
     save_as_input = "./data/cleaned/report_qa_pairs_cleaned.json"
     logger.info(f"Executing QA Pairs Saving for file: {save_as_input}")
-    save_process = save_as(
-        input=save_as_input, 
-        format="ft",
-        storage="json",
-        output=output_dir
-    )
+    save_process = save_as(input=save_as_input, format="ft", storage="json", output=output_dir)
     return create_process + create_process + save_process
 
 
@@ -496,11 +492,24 @@ def server(
     including generating and curating QA pairs, as well as viewing
     and managing generated files.
     """
-    provider = get_llm_provider(ctx.config)
-    console.print(f"Starting web server with {provider} provider...", style="green")
-    console.print(f"Web interface available at: http://{host}:{port}", style="bold green")
-    console.print("Press CTRL+C to stop the server.", style="italic")
 
+    # Initialize logger with SSE enabled
+    log_level = None
+    if debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    logger = setup_logging(
+        log_file=str((DEFAULT_LOG_DIR / "app.log").resolve()),
+        log_level=log_level,
+        enable_sse=True,
+    )
+
+    provider = get_llm_provider(ctx.config)
+    logger.info(f"Starting web server with {provider} provider...")
+    logger.info(f"Web interface available at: http://{host}:{port}")
+    logger.info("Press CTRL+C to stop the server.")
     # Run the Flask server
     run_server(host=host, port=port, debug=debug)
 

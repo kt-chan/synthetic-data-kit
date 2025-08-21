@@ -8,19 +8,15 @@ import re
 import json
 import os
 from typing import List, Dict, Any, Optional
-import logging
+from synthetic_data_kit.utils.app_logger import get_logger
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def parse_summary(chunk_index: int, chunk: str) -> List[Dict[str, str]]:
     """Parse chunk summary from LLM output with enhanced error handling"""
     verbose = os.environ.get("SDK_VERBOSE", "false").lower() == "true"
-
-    if verbose:
-        logger.info(f"Parsing response of length {len(chunk)}")
+    logger.debug(f"Parsing response of length {len(chunk)}")
 
     if chunk and len(chunk) > 0:
         cleaned_text = re.sub(
@@ -154,8 +150,34 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                     parsed["rating"] = int(float(parsed["rating"]))
                     return [parsed]
             except json.JSONDecodeError as e:
-                if verbose:
-                    logger.info(f"JSON parse error for object: {str(e)}")
+                logger.debug(f"JSON parse error for object: {str(e)}")
+
+        # Check if we have a JSON object which is not completed
+        if "{" in json_content and "}" not in json_content:
+            start_idx = json_content.find("{")
+            # Clean up the malformed format: ```json { .... ```
+            end_idx = json_content.find("```")
+            if end_idx <= 0:
+                end_idx = len(json_content)
+            # Clean up the JSON string to handle incompleted object
+            if json_content[-1] == "\"":
+                json_text = json_content[start_idx:end_idx] + "}"
+            else:
+                json_text = json_content[start_idx:end_idx] + "\"}"
+            # Clean up the JSON string to handle common issues
+            # First, convert newlines to spaces in JSON
+            json_text = re.sub(r"\s*\n\s*", " ", json_text)
+
+            # Now, try to parse it
+            try:
+                parsed = json.loads(json_text)
+                if isinstance(parsed, dict) and (
+                    "question" in parsed and "answer" in parsed and "rating" in parsed
+                ):
+                    parsed["rating"] = int(float(parsed["rating"]))
+                    return [parsed]
+            except json.JSONDecodeError as e:
+                logger.debug(f"JSON parse error for object: {str(e)}")
 
         # Check if we have a JSON array
         if "[" in json_content and "]" in json_content:
@@ -171,19 +193,15 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                 if isinstance(parsed, list):
                     for item in parsed:
                         if not isinstance(item, dict) or "rating" not in item:
-                            if verbose:
-                                logger.info(f"Array contains invalid item: {item}")
+                            logger.debug(f"Array contains invalid item: {item}")
                             return []
-                    if verbose:
-                        logger.info(f"Successfully parsed {len(parsed)} items in JSON array")
+                    logger.debug(f"Successfully parsed {len(parsed)} items in JSON array")
                     return parsed
             except json.JSONDecodeError as e:
-                if verbose:
-                    logger.info(f"JSON parse error for array: {str(e)}")
+                logger.debug(f"JSON parse error for array: {str(e)}")
 
     except Exception as e:
-        if verbose:
-            logger.info(f"Error in primary parsing approach: {str(e)}")
+        logger.debug(f"Error in primary parsing approach: {str(e)}")
 
     # Fallback to more specific methods
     # Method 1: Code block extraction
@@ -198,8 +216,7 @@ def parse_ratings(text: str, original_items: List[Dict[str, str]] = None) -> Lis
                     if isinstance(parsed, dict) and (
                         "question" in parsed and "answer" in parsed and "rating" in parsed
                     ):
-                        if verbose:
-                            logger.info("Successfully parsed from code block (single object)")
+                        logger.debug("Successfully parsed from code block (single object)")
                         return [parsed]
                     elif isinstance(parsed, list):
                         valid_items = True

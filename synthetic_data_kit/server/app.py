@@ -5,7 +5,6 @@ Flask application for the Synthetic Data Kit web interface.
 import os, time, json, logging, queue, threading, time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
 from flask import (
     Flask,
     Response,
@@ -32,13 +31,17 @@ from synthetic_data_kit.core.create import process_file
 from synthetic_data_kit.core.curate import curate_qa_pairs
 from synthetic_data_kit.core.save_as import convert_format
 from synthetic_data_kit.core.ingest import process_file as ingest_process_file
+from synthetic_data_kit.utils.app_logger import (
+    get_logger,
+    add_sse_queue,
+    remove_sse_queue,
+)
 
-# Set up logging
-from synthetic_data_kit.utils.AppLogger import get_logger, setup_logging, add_sse_queue, remove_sse_queue
+logger = get_logger(__name__)
+
 
 GLOBAL_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GLOBAL_DEBUG_FLAG = False
-GLOBAL_LOG_LEVEL = logging.INFO
 GLOBAL_CONFIG = load_config()
 
 app = Flask(
@@ -46,10 +49,9 @@ app = Flask(
 )
 app.config["SECRET_KEY"] = os.urandom(24)
 executor = ThreadPoolExecutor(max_workers=1)
-logger = None
+
 
 # Set default paths
-DEFAULT_LOG_DIR = Path(__file__).parents[2] / "logs"
 DEFAULT_DATA_DIR = Path(__file__).parents[2] / "data"
 DEFAULT_CONFIG_DIR = Path(__file__).parents[2] / "configs"
 DEFAULT_OUTPUT_DIR = DEFAULT_DATA_DIR / "output"
@@ -75,27 +77,8 @@ def reload_config():
     return GLOBAL_CONFIG
 
 
-def reload_setup(debug=False):
-    """Reload the configuration from the config file."""
-    global GLOBAL_DEBUG_FLAG
-    global GLOBAL_LOG_LEVEL
-    global logger
-    GLOBAL_DEBUG_FLAG = debug
-
-    if GLOBAL_DEBUG_FLAG:
-        GLOBAL_LOG_LEVEL = logging.DEBUG
-
-    # Initialize logger with SSE enabled
-    # logger = setup_logging(
-    #     log_file=str((DEFAULT_LOG_DIR / "app.log").resolve()),
-    #     log_level=GLOBAL_LOG_LEVEL,
-    #     enable_sse=True,
-    # )
-    logger = setup_logging(
-        log_file=str((DEFAULT_LOG_DIR / "app.log").resolve()),
-        log_level=GLOBAL_LOG_LEVEL,
-        enable_sse=True
-    )
+def truncate_datastore():
+    config = get_config_path()
 
 
 # Forms
@@ -254,6 +237,79 @@ def process():
 def process_all_task():
     global task_running, task_complete
 
+    def process_files(files):
+        """Background task to process files"""
+        global task_running, task_complete
+        global GLOBAL_CONFIG
+        global GLOBAL_DEBUG_FLAG
+
+        if GLOBAL_CONFIG is None:
+            GLOBAL_CONFIG = reload_config()
+
+        provider = get_llm_provider(GLOBAL_CONFIG)
+        if provider not in ("vllm", "api-endpoint"):
+            flash(f"Error: LLM provider is not defined correctly", "danger")
+        time.sleep(2)
+
+        try:
+            logger.info(f"Starting to process {len(files)} files")
+            for i, file in enumerate(files):
+                try:
+                    logger.info(f"Processing file {i+1}/{len(files)}: {file}")
+                    # Simulate processing time with different log levels
+                    time.sleep(1)
+                    content_type = "qa"
+                    num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
+                    filename = Path(file).stem
+                    fileformat = Path(file).suffix
+
+                    logger.info(f"Create Task Starting ..., Creating Summary & QA Pairs")
+                    create_process = process_file(
+                        file_path=file,
+                        output_dir=str(DEFAULT_GENERATED_DIR),
+                        content_type=content_type,
+                        num_pairs=num_pairs,
+                        provider=provider,
+                        config_path=get_config_path(),
+                        verbose=GLOBAL_DEBUG_FLAG,
+                    )
+                    logger.info(f"Create Task Completed")
+
+                    logger.info(f"Curate TaskStarting ..., Validating QA Pairs")
+                    curate_input = DEFAULT_GENERATED_DIR / (filename + "_qa_pairs.json")
+                    output_path = DEFAULT_CURATED_DIR / (filename + "_qa_pairs.json")
+                    logger.info(f"Executing QA Pairs Curation for file: {curate_input}")
+                    curate_process = curate_qa_pairs(
+                        input_path=curate_input,
+                        output_path=output_path,
+                        provider=provider,
+                        config_path=get_config_path(),
+                        verbose=GLOBAL_DEBUG_FLAG,
+                    )
+                    logger.info(f"Create Task Completed")
+
+                    logger.info(f"Save Task Starting ...,  Generating SFT Dataset")
+                    save_as_input = DEFAULT_CURATED_DIR / (filename + "_qa_pairs.json")
+                    output_path = DEFAULT_FINAL_DIR / (filename + "_qa_pairs.json")
+                    logger.info(f"Executing QA Pairs Saving for file: {save_as_input}")
+                    save_process = convert_format(
+                        input_path=save_as_input,
+                        output_path=output_path,
+                        format_type="ft",
+                        storage_format="json",
+                        config_path=get_config_path(),
+                        verbose=GLOBAL_DEBUG_FLAG,
+                    )
+
+                    logger.info("All files processed successfully")
+                except Exception as e:
+                    logger.error(f"Error processing files: {e}")
+        except Exception as e:
+            logger.error(f"Error processing files: {e}")
+        finally:
+            task_running = False
+            task_complete = True
+
     if task_running:
         return jsonify({"error": "Task is already running"}), 400
 
@@ -294,166 +350,13 @@ def stream_task_log():
 
                     # Check if task is complete
                     if task_complete:
-                        yield 'data: {"message": "Task completed", "level": "INFO"}\n\n'
+                        yield 'data: "Task completed"\n\n'
                         break
         except GeneratorExit:
             # Client disconnected, remove the queue
             remove_sse_queue(log_queue)
 
     return Response(generate(), mimetype="text/event-stream")
-
-
-def process_files(files):
-    """Background task to process files"""
-    global task_running, task_complete
-    global GLOBAL_CONFIG
-    global GLOBAL_DEBUG_FLAG
-
-    if GLOBAL_CONFIG is None:
-        GLOBAL_CONFIG = reload_config()
-
-    provider = get_llm_provider(GLOBAL_CONFIG)
-    if provider not in ("vllm", "api-endpoint"):
-        flash(f"Error: LLM provider is not defined correctly", "danger")
-    time.sleep(2)
-    
-    try:
-        logger.info(f"Starting to process {len(files)} files")
-        for i in range(5):
-            logger.info(f"Round {i}")
-            for file in files:
-                logger.info(f"Processing file {i+1}/{len(files)}: {file}")
-                # Simulate processing time with different log levels
-                time.sleep(1)
-                content_type = "qa"
-                num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
-                process_file(
-                    file_path=file,
-                    output_dir=str(DEFAULT_GENERATED_DIR),
-                    content_type=content_type,
-                    num_pairs=num_pairs,
-                    provider=provider,
-                    config_path=get_config_path(),
-                    verbose=GLOBAL_DEBUG_FLAG,
-                )
-        logger.info("All files processed successfully")
-    except Exception as e:
-        logger.error(f"Error processing files: {e}")
-    finally:
-        task_running = False
-        task_complete = True
-
-
-# @app.route("/process_all_task", methods=["GET", "POST"])
-# def process_all_task():
-#     """
-#     End to End Process from ingest, to create, to curate, to save-as
-#     """
-#     global GLOBAL_CONFIG
-#     global GLOBAL_DEBUG_FLAG
-
-#     if GLOBAL_CONFIG is None:
-#         GLOBAL_CONFIG = reload_config()
-
-#     provider = get_llm_provider(GLOBAL_CONFIG)
-#     if provider not in ("vllm", "api-endpoint"):
-#         flash(f"Error: LLM provider is not defined correctly", "danger")
-
-#     input_str = request.data
-#     input_files = json.loads(unquote(input_str))
-
-#     if input_files is None or len(input_files) == 0:
-#         flash(f"Error: fail to load files!", "danger")
-
-#     def process_file_wrapper(file):
-#         logger.info(f"Processing file: {file}")
-#         content_type = "qa"
-#         num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
-#         # process_file(
-#         #     file_path=file,
-#         #     output_dir=str(DEFAULT_GENERATED_DIR),
-#         #     content_type=content_type,
-#         #     num_pairs=num_pairs,
-#         #     provider=provider,
-#         #     config_path=get_config_path(),
-#         #     verbose=GLOBAL_DEBUG_FLAG,
-#         # )
-
-#         for i in range(10):
-#             logger.info(f"Log: {i}")
-#             time.sleep(1)
-
-#         logger.info(f"Finished processing file: {file}")
-
-#     for file in input_files:
-#         executor.submit(process_file_wrapper, file)
-
-#     return jsonify({"status": "Task initiated successfully"}), 200
-
-
-# @app.route("/stream_task_log", methods=["GET", "POST"])
-# def stream_task_log():
-#     def log_stream():
-#         while True:
-#             try:
-#                 message = log_queue.get_nowait()
-#                 yield f"data: {message}\n\n"
-#             except queue.Empty:
-#                 yield "data: empty\n\n"
-#             time.sleep(1)
-
-#     return Response(log_stream(), mimetype="text/event-stream")
-
-#     # import json
-#     # from urllib.parse import unquote
-
-#     # global GLOBAL_CONFIG
-#     # global GLOBAL_DEBUG_FLAG
-
-#     # if GLOBAL_CONFIG is None:
-#     #     GLOBAL_CONFIG = reload_config()
-
-#     # provider = get_llm_provider(GLOBAL_CONFIG)
-
-#     # if provider not in ("vllm", "api-endpoint"):
-#     #     flash(f"Error: LLM provider is not defined correctly", "danger")
-
-#     # input_str = request.args.get("files")
-#     # input_files = json.loads(unquote(input_str))
-
-#     # if input_files is None or len(input_files) == 0:
-#     #     flash(f"Error: fail to load files!", "danger")
-
-#     # for file in input_files:
-#     #     create_input = file
-
-#     #     logger.info(f"Executing QA Pairs Creation for file: {create_input}")
-#     #     content_type = "qa"
-#     #     num_pairs = GLOBAL_CONFIG.get("generation", {}).get("num_pairs", 100)
-#     #     create_process = process_file(
-#     #         file_path=create_input,
-#     #         output_dir=str(DEFAULT_GENERATED_DIR),
-#     #         content_type=content_type,
-#     #         num_pairs=num_pairs,
-#     #         provider=provider,
-#     #         config_path=get_config_path(),
-#     #         verbose=GLOBAL_DEBUG_FLAG,
-#     #     )
-
-#     # curate_input = "./data/generated/report_qa_pairs.json"
-#     # logger.info(f"Executing QA Pairs Curation for file: {curate_input}")
-#     # create_process = curate(
-#     #     input=curate_input,
-#     #     output=output_dir,
-#     #     api_base=api_base,
-#     #     model=model,
-#     #     verbose=verbose,
-#     # )
-
-#     # save_as_input = "./data/cleaned/report_qa_pairs_cleaned.json"
-#     # logger.info(f"Executing QA Pairs Saving for file: {save_as_input}")
-#     # save_process = save_as(input=save_as_input, format="ft", storage="json", output=output_dir)
-#     # return create_process + create_process + save_process
 
 
 @app.route("/set_config", methods=["GET", "POST"])
@@ -549,7 +452,7 @@ def curate():
             # Create output path
             filename = Path(input_file).stem
             output_file = f"{filename}_cleaned.json"
-            output_path = str(Path(DEFAULT_CURATED_DIR) / output_file)
+            output_path = DEFAULT_CURATED_DIR / output_file
 
             result_path = curate_qa_pairs(
                 input_path=input_file,
@@ -946,7 +849,8 @@ def delete_item(file_path):
 
 def run_server(host="127.0.0.1", port=5000, debug=False):
     """Run the Flask server"""
-    reload_setup(debug)
+    global GLOBAL_DEBUG_FLAG
+    GLOBAL_DEBUG_FLAG = debug
     logger.info(f"Run the Flask server: {host}:{port}")
     logger.info(f"Mode: {("debug" if debug else "production") }")
     app.run(host=host, port=port, debug=debug)
