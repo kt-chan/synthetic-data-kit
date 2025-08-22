@@ -24,7 +24,6 @@ from synthetic_data_kit.utils.app_logger import get_logger
 logger = get_logger(__name__)
 
 
-
 class RAGProccesor:
     def __init__(self, client: LLMClient, config_path: Optional[Path] = None):
         """Initialize the QA Generator with an LLM client and optional config"""
@@ -95,17 +94,63 @@ class RAGProccesor:
 
         return collection
 
-    def write_es_index(self, chunks: List[str]):
-        # Function to index documents
+    def _write_to_vector(self, chunks: list[str], metas: list[dict]) -> bool:
         try:
-            actions = [
-                {"_index": self.es_index_name, "_source": {"text": chunk}} for chunk in chunks
-            ]
-            bulk(self.es_client, actions)
+            collection = self.get_collection()
+            ids = [str(i) for i in range(len(chunks))]
+            embeddings = self.model.encode(chunks)
+            if len(embeddings) == 0:
+                raise Exception(f"VectorDB Error processing with empty embeddings")
+
+            ## Delete first for overwrite the collection with the same filenames
+            filesnames = list({meta_item["filename"] for meta_item in metas})
+            collection.delete(where={"filename": {"$in": filesnames}})
+
+            collection.add(ids=ids, embeddings=embeddings, documents=chunks, metadatas=metas)
+            logger.info(
+                f"Loaded {str(collection.count())} chunks into {self.rag_collection_name} and {self.es_index_name}"
+            )
             return True
         except Exception as e:
-            logger.error(f"\n ElasticSearch Error processing with exception:/n {str(e)}")
-            raise Exception(f"ElasticSearch Error processing with exception:/n {str(e)}")
+            logger.error(f"\n VectorDB store Error processing with exception:/n {str(e)}")
+            return False
+
+    def _write_to_text(self, chunks: list[str], metas: list[dict]) -> bool:
+        # Function to index documents
+
+        try:
+            filenames, chunkids = zip(
+                *[(meta_item["filename"], meta_item["chunkid"]) for meta_item in metas]
+            )
+
+            delete_query = {
+                "query": {
+                    "terms": {
+                        "filename.keyword": list(
+                            set(filenames)
+                        )  # Use .keyword if filename is not analyzed
+                    }
+                }
+            }
+            delete_response = self.es_client.delete_by_query(
+                index=self.es_index_name, body=delete_query
+            )
+
+            if len(delete_response.get("failures")) == 0 and delete_response.get("deleted", 0) > 0:
+                logger.debug(f"Success: Deleted {delete_response['deleted']} documents in fulltext search store.")
+
+            insert_actions = [
+                {
+                    "_index": self.es_index_name,
+                    "_source": {"filename": filename, "chunkid": chunkid, "text": chunk},
+                }
+                for filename, chunkid, chunk in zip(filenames, chunkids, chunks)
+            ]
+            bulk(self.es_client, insert_actions)
+            return True
+        except Exception as e:
+            logger.error(f"\n Fulltext search store Error processing with exception:/n {str(e)}")
+            return False
 
     def search_es_index(self, query, top_k=3) -> List[Tuple[str, float]]:
         query_body = {"query": {"match": {"text": query}}}
@@ -113,20 +158,18 @@ class RAGProccesor:
         return [(hit["_source"]["text"], hit["_score"]) for hit in response["hits"]["hits"]]
 
     def wrte_chunks(self, chunks: list[str], metas: list[dict]):
+        """
+        metas data:
+        "filename": item["filename"],
+        "chunkid": item["filename"] + "_" + str(item["id"]),
+        "summary": item["summary"],
+        """
         try:
-            collection = self.get_collection()
-            ids = [str(i) for i in range(len(chunks))]
-            embeddings = self.model.encode(chunks)
-            if len(embeddings) == 0:
-                raise Exception(f"VectorDB Error processing with empty embeddings")
-            collection.add(ids=ids, embeddings=embeddings, documents=chunks, metadatas=metas)
-            self.write_es_index(chunks)
-            logger.info(
-                f"Loaded {str(collection.count())} chunks into {self.rag_collection_name} and {self.es_index_name}"
-            )
+            vector_operation = self._write_to_vector(chunks, metas)
+            fulltext_operation = self._write_to_text(chunks, metas)
+            return vector_operation and fulltext_operation
         except Exception as e:
-            logger.error(f"\n VectorDB Error processing with exception:/n {str(e)}")
-            raise Exception(f"VectorDB Error processing with exception:/n {str(e)}")
+            raise Exception(f"Chunk writing error processing with exception:/n {str(e)}")
 
     def _process_single_qa_prompt(
         self, qa_pair: Dict[str, str], max_chars: int = 10000

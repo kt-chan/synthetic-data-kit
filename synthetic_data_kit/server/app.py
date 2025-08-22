@@ -39,7 +39,7 @@ from synthetic_data_kit.utils.app_logger import (
 
 logger = get_logger(__name__)
 
-
+GLBOAL_TASK_COMPLETED_MESSAGE = "##### Task completed #####"
 GLOBAL_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GLOBAL_DEBUG_FLAG = False
 GLOBAL_CONFIG = load_config()
@@ -66,8 +66,8 @@ DEFAULT_CURATED_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_FINAL_DIR.mkdir(parents=True, exist_ok=True)
 
 # Global task status
-task_running = False
-task_complete = False
+task_running = threading.Event()
+task_complete = threading.Event()
 
 
 def reload_config():
@@ -235,7 +235,9 @@ def process():
 
 @app.route("/process_all_task", methods=["POST"])
 def process_all_task():
-    global task_running, task_complete
+
+    if task_running.is_set():
+        return jsonify({"error": "Task is already running"}), 400
 
     def process_files(files):
         """Background task to process files"""
@@ -307,19 +309,16 @@ def process_all_task():
         except Exception as e:
             logger.error(f"Error processing files: {e}")
         finally:
-            task_running = False
-            task_complete = True
-
-    if task_running:
-        return jsonify({"error": "Task is already running"}), 400
+            task_running.clear()
+            task_complete.set()
 
     try:
         task_files = request.get_json()
         logger.info(f"Starting to process {len(task_files)} files")
-        task_running = True
-        task_complete = False
+        task_running.set()
+        task_complete.clear()  # Reset completion flag
 
-        # Start a background thread to process the task
+        # Start background thread
         thread = threading.Thread(target=process_files, args=(task_files,))
         thread.daemon = True
         thread.start()
@@ -327,6 +326,7 @@ def process_all_task():
         return jsonify({"status": "started", "message": "Task processing started"})
     except Exception as e:
         logger.error(f"Error starting task: {e}")
+        task_running.clear()
         return jsonify({"error": str(e)}), 500
 
 
@@ -338,22 +338,26 @@ def stream_task_log():
 
     def generate():
         try:
-            # Send a keep-alive message every 15 seconds
             while True:
+                # Check if task is complete or client disconnected
+                if task_complete.is_set():
+                    # yield f"data: {GLBOAL_TASK_COMPLETED_MESSAGE}"
+                    yield 'data: ' + GLBOAL_TASK_COMPLETED_MESSAGE+ '\n\n'
+                    break
+
                 try:
-                    # Try to get a message from the queue with a timeout
-                    message = log_queue.get(timeout=15)
+                    # Short timeout to frequently check task completion
+                    message = log_queue.get(timeout=10)
                     yield f"data: {message}\n\n"
                 except queue.Empty:
-                    # Send a keep-alive comment to prevent connection timeout
-                    yield ": keep-alive\n\n"
-
-                    # Check if task is complete
-                    if task_complete:
-                        yield 'data: "Task completed"\n\n'
+                    # Check completion again after timeout
+                    if task_complete.is_set():
+                        yield 'data: ' + GLBOAL_TASK_COMPLETED_MESSAGE+ '\n\n'
                         break
-        except GeneratorExit:
-            # Client disconnected, remove the queue
+                    # Send keep-alive
+                    yield ": keep-alive\n\n"
+        finally:
+            # Always clean up the queue
             remove_sse_queue(log_queue)
 
     return Response(generate(), mimetype="text/event-stream")

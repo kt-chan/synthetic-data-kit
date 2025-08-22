@@ -88,6 +88,12 @@
                     const logsDiv = document.getElementById('editor');
                     logsDiv.innerHTML += event_data + '<br>';
                     logsDiv.scrollTop = logsDiv.scrollHeight;
+                    // Exit when recieved completed message
+                    if (event_data.includes("##### Task completed #####")) {
+                        logsDiv.innerHTML += "Task completed message received. Closing EventSource." + '<br>';
+                        logsDiv.scrollTop = logsDiv.scrollHeight;
+                        eventSource.close();
+                    }
                 };
                 eventSource.onerror = function (error) {
                     console.error('EventSource failed:', error);

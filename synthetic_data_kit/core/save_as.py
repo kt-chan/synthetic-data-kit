@@ -25,6 +25,7 @@ from synthetic_data_kit.utils.config import (
     get_config_path,
     get_path_config,
 )
+
 logger = get_logger(__name__)
 
 
@@ -34,7 +35,7 @@ def convert_format(
     format_type: str,
     storage_format: str = "json",
     config_path: Optional[Dict[str, Any]] = None,
-    verbose: Optional[bool] = False
+    verbose: Optional[bool] = False,
 ) -> str:
     """Convert data to different formats
 
@@ -49,7 +50,7 @@ def convert_format(
         Path to the output file or directory
     """
     logger.info(f"Save task started for file: {input_path}")
-    
+
     # Load input file
     with open(input_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -128,13 +129,17 @@ def convert_format(
     # Standard JSON file storage format
     else:
         # Convert to the requested format using existing functions
+
         if format_type == "jsonl":
-            return to_jsonl(qa_pairs, output_path)
+            output_path = to_jsonl(qa_pairs, output_path)
         elif format_type == "alpaca":
-            return to_alpaca(qa_pairs, output_path)
+            output_path = to_alpaca(qa_pairs, output_path)
         elif format_type == "ft":
-            return to_fine_tuning(qa_pairs, output_path)
+            output_path = to_fine_tuning(qa_pairs, output_path)
         elif format_type == "chatml":
-            return to_chatml(qa_pairs, output_path)
+            output_path = to_chatml(qa_pairs, output_path)
         else:
             raise ValueError(f"Unknown format type: {format_type}")
+
+        logger.info(f"Geneate SFT task completed: saved file: {output_path}")
+        return output_path

@@ -87,14 +87,21 @@ class QAGenerator:
                     {"filename": f, "id": s["id"], "summary": s["data"]}
                     for f, s in zip(fileNames, summaries)
                 ]
-                ragClient = RAGProccesor(self.client, self.config_path)
+
                 rag_chunks = []
                 rag_metas = []
                 for item in metas:
                     rag_chunks.append(chunks[item["id"]])
-                    rag_metas.append({"filename": item["filename"], "summary": item["summary"]})
+                    rag_metas.append(
+                        {
+                            "filename": item["filename"],
+                            "chunkid": item["filename"] + "_" + str(item["id"]),
+                            "summary": item["summary"],
+                        }
+                    )
 
                 if len(rag_chunks) > 0 and len(rag_metas) > 0:
+                    ragClient = RAGProccesor(self.client, self.config_path)
                     ragClient.wrte_chunks(rag_chunks, rag_metas)
 
             return True
@@ -239,7 +246,13 @@ class QAGenerator:
         summaries = self.batch_inference(all_messages, taskFunc=parse_summary, temperature=0.1)
         # Write chunks to rag for better QA pair generation, only for top stack which is fact.
         if self.enable_rag and current_depth == 0:
+            logger.info(
+                f"Writing chunks and summaries to database stores, with size: {len(summaries)}"
+            )
             self.write2rag(fileName, chunks, summaries)
+            logger.info(
+                f"written {len(summaries)} chunks into database stores completed."
+            )
 
         summaries = list(map(lambda x: x.get("data"), summaries))
         summaries_text = "\n".join(summaries).strip()
@@ -426,7 +439,7 @@ class QAGenerator:
                 logger.info(
                     f"Processing batch {batch_num}/{total_batches} with {current_batch_size} chunks each ..."
                 )
-                
+
             try:
                 # Process the batch
                 batch_responses = self.client.batch_completion(

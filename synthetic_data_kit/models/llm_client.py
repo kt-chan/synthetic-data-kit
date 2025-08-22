@@ -101,7 +101,11 @@ class LLMClient:
             self.model = model_name or api_endpoint_config.get("model")
             self.max_retries = max_retries or api_endpoint_config.get("max_retries")
             self.retry_delay = retry_delay or api_endpoint_config.get("retry_delay")
-
+            self.connections = api_endpoint_config.get("connections", 1)
+            self.threads = api_endpoint_config.get("threads", 8)
+            # Thread-local storage for session objects (class-level, not instance-level)
+            self._thread_local = threading.local()
+            
             # Initialize OpenAI client
             self._init_openai_client()
         else:  # Default to vLLM
@@ -215,7 +219,7 @@ class LLMClient:
         temperature: float,
         max_tokens: int,
         top_p: float,
-        verbose: bool,
+        verbose: bool = False,
     ) -> str:
         """Generate a chat completion using the OpenAI API or compatible APIs"""
         debug_mode = os.environ.get("SDK_DEBUG", "false").lower() == "true"
@@ -447,7 +451,7 @@ class LLMClient:
         while retry_count < max_retries:
             try:
                 if self.provider == "api-endpoint":
-                    llm_output = self._openai_batch_completion(
+                    llm_output = self._generic_openai_batch_completion(
                         message_batches, temperature, max_tokens, top_p, batch_size, verbose
                     )
                 else:  # Default to vLLM
@@ -658,6 +662,92 @@ class LLMClient:
                     return f"ERROR: {str(e)}"
 
                 await asyncio.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
+
+    def _generic_openai_batch_completion(
+        self,
+        message_batches: List[List[Dict[str, str]]],
+        temperature: float,
+        max_tokens: int,
+        top_p: float,
+        batch_size: int,
+        verbose: bool,
+    ) -> List[str]:
+        """Process batches with optimized threading and connection pooling for compatible APIs asynchronously"""
+        results = []
+        total_batches = len(message_batches)
+
+        # Use single executor for all batches
+        with ThreadPoolExecutor(max_workers=min(batch_size, self.connections)) as executor:
+            for batch_idx in range(0, total_batches, batch_size):
+                batch_chunk = message_batches[batch_idx : batch_idx + batch_size]
+                current_batch = batch_idx // batch_size + 1
+                total_batch_count = (total_batches + batch_size - 1) // batch_size
+
+                
+                logger.debug(
+                        f"Processing batch {current_batch}/{total_batch_count} "
+                        f"with {len(batch_chunk)} requests"
+                    )
+
+                # Prepare batch requests
+                ''' _openai_chat_completion interface
+                    self
+                    messages: List[Dict[str, str]],
+                    temperature: float,
+                    max_tokens: int,
+                    top_p: float,
+                    verbose: bool,
+                '''
+                # Patch API interface for ChatGLM, only role user is allowed.
+                for messages in batch_chunk:
+                    for message in messages:
+                        message['role'] = 'user'
+
+                batch_requests = [
+                    {
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens,
+                        "top_p": top_p,
+                        "verbose": verbose
+                    }
+                    for messages in batch_chunk
+                ]
+                
+
+                try:
+                    # Submit all requests in current batch
+                    future_to_index = {}
+                    for idx, req in enumerate(batch_requests):
+                        future = executor.submit(self._openai_chat_completion, **req)
+                        future_to_index[future] = idx
+
+                    # Collect results as they complete
+                    batch_results = [None] * len(batch_requests)
+                    for future in as_completed(future_to_index):
+                        idx = future_to_index[future]
+                        try:
+                            batch_results[idx] = future.result()
+                        except Exception as e:
+                            logger.error(f"Request failed: {str(e)}")
+                            batch_results[idx] = f"Error: {str(e)}"
+
+                    results.extend(batch_results)
+
+                except Exception as e:
+                    logger.exception(f"Batch processing failed: {str(e)}")
+                    # Fallback to sequential processing
+                    for req in batch_requests:
+                        try:
+                            results.append(self._send_vllm_request(req, verbose))
+                        except Exception as fallback_e:
+                            results.append(f"Error: {str(fallback_e)}")
+
+                # Inter-batch delay to prevent server overload
+                if batch_idx + batch_size < total_batches:
+                    time.sleep(0.1)
+
+        return results
 
     def _openai_batch_completion(
         self,
