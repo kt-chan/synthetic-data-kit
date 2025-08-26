@@ -157,6 +157,33 @@ class ConfigForm(FlaskForm):
 class IngestForm(FlaskForm):
     """Form for ingesting documents"""
 
+    def get_all_files(self, input_directory: Path, config):
+
+        # Get the list of available input files
+        input_files = []
+        DEFAULT_DATA_DIR_PARENT = DEFAULT_DATA_DIR.parent
+
+        if input_directory.is_dir():
+            # Collect files recursively
+            for f in input_directory.rglob("*.*"):
+                f = f.resolve()
+                try:
+                    relative_path = str(f.relative_to(DEFAULT_DATA_DIR_PARENT))
+                    input_files.append(relative_path)
+                except ValueError:
+                    print(f"Warning: {f} is not in the subpath of {DEFAULT_DATA_DIR_PARENT}")
+        elif input_directory.is_file():
+            # Add the single file
+            f = input_directory.resolve()
+            try:
+                relative_path = str(f.relative_to(DEFAULT_DATA_DIR_PARENT))
+                input_files.append(relative_path)
+            except ValueError:
+                print(
+                    f"Warning: {input_directory} is not in the subpath of {DEFAULT_DATA_DIR_PARENT}"
+                )
+        return input_files
+
     input_type = SelectField(
         "Input Type",
         choices=[("file", "Upload File"), ("url", "URL"), ("path", "Local Path")],
@@ -342,7 +369,7 @@ def stream_task_log():
                 # Check if task is complete or client disconnected
                 if task_complete.is_set():
                     # yield f"data: {GLBOAL_TASK_COMPLETED_MESSAGE}"
-                    yield 'data: ' + GLBOAL_TASK_COMPLETED_MESSAGE+ '\n\n'
+                    yield "data: " + GLBOAL_TASK_COMPLETED_MESSAGE + "\n\n"
                     break
 
                 try:
@@ -352,7 +379,7 @@ def stream_task_log():
                 except queue.Empty:
                     # Check completion again after timeout
                     if task_complete.is_set():
-                        yield 'data: ' + GLBOAL_TASK_COMPLETED_MESSAGE+ '\n\n'
+                        yield "data: " + GLBOAL_TASK_COMPLETED_MESSAGE + "\n\n"
                         break
                     # Send keep-alive
                     yield ": keep-alive\n\n"
@@ -600,7 +627,7 @@ def view_file(file_path):
 def ingest():
     """Ingest and parse documents"""
     form = IngestForm()
-
+    files = []
     if form.validate_on_submit():
         try:
             input_type = form.input_type.data
@@ -631,34 +658,42 @@ def ingest():
                 # Process the file
                 input_path = str(temp_path)
             else:
-                # URL or local path
                 input_path = form.input_path.data
+
                 if not input_path:
                     flash("Please enter a valid path or URL", "warning")
                     return render_template("ingest.html", form=form)
 
+                input_path = Path(form.input_path.data)
+                files.extend(form.get_all_files(input_path, GLOBAL_CONFIG))
+
             # Process the file or URL
-            output_path = ingest_process_file(
-                file_path=input_path,
-                output_dir=output_dir,
-                output_name=output_name,
-                config=GLOBAL_CONFIG,
-            )
-
-            # Clean up temporary file if it was an upload
-            if input_type == "file" and temp_path.exists():
+            for input_path in files:
                 try:
-                    temp_path.unlink()
-                except:
-                    pass
 
-            flash(f"Successfully parsed document! Output saved to: {output_path}", "success")
-            return redirect(
-                url_for(
-                    "view_file",
-                    file_path=str(Path(output_path).relative_to(DEFAULT_DATA_DIR.parent)),
-                )
-            )
+                    output_path = ingest_process_file(
+                        file_path=input_path,
+                        output_dir=output_dir,
+                        output_name=output_name,
+                        config=GLOBAL_CONFIG,
+                    )
+
+                    # Clean up temporary file if it was an upload
+                    if input_type == "file" and temp_path.exists():
+                        try:
+                            temp_path.unlink()
+                        except:
+                            pass
+
+                    flash(
+                        f"Successfully parsed document! Output saved to: {output_path}", "success"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Error in file injection for file {input_path} with error: {str(e)}"
+                    )
+
+            return redirect(url_for("files"))
 
         except Exception as e:
             flash(f"Error: {str(e)}", "danger")

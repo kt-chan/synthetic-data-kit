@@ -9736,3 +9736,234 @@
 2025-08-22 17:45:07,300 - synthetic_data_kit.core.save_as - INFO - Save task started for file: D:\GitHub\synthetic-data-kit\data\cleaned\KGA_qa_pairs.json
 2025-08-22 17:45:07,308 - synthetic_data_kit.core.save_as - INFO - Geneate SFT task completed: saved file: D:\GitHub\synthetic-data-kit\data\final\KGA_qa_pairs.json
 2025-08-22 17:45:07,308 - synthetic_data_kit.server.app - INFO - All files processed successfully
+2025-08-22 17:50:28,995 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-22 17:50:28,997 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:50:28] "GET / HTTP/1.1" 200 -
+2025-08-22 17:50:33,283 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:50:33] "GET /set_config HTTP/1.1" 200 -
+2025-08-22 17:50:33,315 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:50:33] "[36mGET /static/js/ace.js HTTP/1.1[0m" 304 -
+2025-08-22 17:50:33,338 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:50:33] "[36mGET /static/js/theme-monokai.js HTTP/1.1[0m" 304 -
+2025-08-22 17:50:33,342 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:50:33] "[36mGET /static/js/mode-yaml.js HTTP/1.1[0m" 304 -
+2025-08-22 17:51:04,891 - synthetic_data_kit.utils.config - INFO - Loading config from: D:\GitHub\synthetic-data-kit\configs\config.yaml
+2025-08-22 17:51:04,910 - synthetic_data_kit.utils.config - INFO - Config has LLM provider set to: api-endpoint
+2025-08-22 17:51:04,911 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:04] "[32mPOST /set_config HTTP/1.1[0m" 302 -
+2025-08-22 17:51:04,919 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-22 17:51:04,920 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:04] "GET / HTTP/1.1" 200 -
+2025-08-22 17:51:55,064 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:55] "GET /set_config HTTP/1.1" 200 -
+2025-08-22 17:51:55,096 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:55] "[36mGET /static/js/ace.js HTTP/1.1[0m" 304 -
+2025-08-22 17:51:55,131 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:55] "[36mGET /static/js/theme-monokai.js HTTP/1.1[0m" 304 -
+2025-08-22 17:51:55,137 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:55] "[36mGET /static/js/mode-yaml.js HTTP/1.1[0m" 304 -
+2025-08-22 17:51:58,356 - synthetic_data_kit.utils.config - INFO - Loading config from: D:\GitHub\synthetic-data-kit\configs\config.yaml
+2025-08-22 17:51:58,370 - synthetic_data_kit.utils.config - INFO - Config has LLM provider set to: vllm
+2025-08-22 17:51:58,372 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:58] "[32mPOST /set_config HTTP/1.1[0m" 302 -
+2025-08-22 17:51:58,379 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: vllm
+2025-08-22 17:51:58,381 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:51:58] "GET / HTTP/1.1" 200 -
+2025-08-22 17:52:00,998 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:00] "GET /set_config HTTP/1.1" 200 -
+2025-08-22 17:52:01,028 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:01] "[36mGET /static/js/ace.js HTTP/1.1[0m" 304 -
+2025-08-22 17:52:01,048 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:01] "[36mGET /static/js/theme-monokai.js HTTP/1.1[0m" 304 -
+2025-08-22 17:52:01,049 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:01] "[36mGET /static/js/mode-yaml.js HTTP/1.1[0m" 304 -
+2025-08-22 17:52:13,520 - synthetic_data_kit.utils.config - INFO - Loading config from: D:\GitHub\synthetic-data-kit\configs\config.yaml
+2025-08-22 17:52:13,538 - synthetic_data_kit.utils.config - INFO - Config has LLM provider set to: api-endpoint
+2025-08-22 17:52:13,540 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:13] "[32mPOST /set_config HTTP/1.1[0m" 302 -
+2025-08-22 17:52:13,549 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-22 17:52:13,552 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:13] "GET / HTTP/1.1" 200 -
+2025-08-22 17:52:21,396 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:52:21] "GET /files HTTP/1.1" 200 -
+2025-08-22 17:53:59,280 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:53:59] "GET /files HTTP/1.1" 200 -
+2025-08-22 17:54:02,059 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:54:02] "GET /view/data\\output\\KGA.txt HTTP/1.1" 200 -
+2025-08-22 17:54:13,717 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 17:54:13] "GET /files HTTP/1.1" 200 -
+2025-08-22 18:00:02,172 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-22 18:00:02,173 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 18:00:02] "GET / HTTP/1.1" 200 -
+2025-08-22 18:00:09,340 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 18:00:09] "POST /process HTTP/1.1" 200 -
+2025-08-22 18:00:09,391 - synthetic_data_kit.server.app - INFO - Starting to process 2 files
+2025-08-22 18:00:09,392 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-22 18:00:09,393 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 18:00:09] "POST /process_all_task HTTP/1.1" 200 -
+2025-08-22 18:00:11,394 - synthetic_data_kit.server.app - INFO - Starting to process 2 files
+2025-08-22 18:00:11,396 - synthetic_data_kit.server.app - INFO - Processing file 1/2: data\output\KGA.txt
+2025-08-22 18:00:11,396 - werkzeug - INFO - 127.0.0.1 - - [22/Aug/2025 18:00:11] "GET /stream_task_log HTTP/1.1" 200 -
+2025-08-22 18:00:12,397 - synthetic_data_kit.server.app - INFO - Create Task Starting ..., Creating Summary & QA Pairs
+2025-08-22 18:00:12,399 - synthetic_data_kit.utils.config - INFO - Loading config from: D:\GitHub\synthetic-data-kit\configs\config.yaml
+2025-08-22 18:00:12,428 - synthetic_data_kit.utils.config - INFO - Config has LLM provider set to: api-endpoint
+2025-08-22 18:00:13,129 - synthetic_data_kit.core.create - INFO - Using api-endpoint provider
+2025-08-22 18:00:13,131 - synthetic_data_kit.utils.config - INFO - Loading config from: D:\GitHub\synthetic-data-kit\configs\config.yaml
+2025-08-22 18:00:13,143 - synthetic_data_kit.utils.config - INFO - Config has LLM provider set to: api-endpoint
+2025-08-22 18:00:13,145 - synthetic_data_kit.generators.qa_generator - INFO - Calling Summarization for document size of 18556
+2025-08-22 18:00:13,146 - synthetic_data_kit.generators.qa_generator - INFO - 	Recursive summarization with internal RAG handling at level 1
+2025-08-22 18:00:13,146 - synthetic_data_kit.generators.qa_generator - INFO - Cut a doc size of 18555 into 22 chunks to generate summary...
+2025-08-22 18:00:13,146 - synthetic_data_kit.generators.qa_generator - INFO - Processing batch 1/3 with 8 chunks each ...
+2025-08-22 18:00:15,688 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:16,115 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:16,347 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:17,389 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:18,770 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:18,851 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:19,333 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:20,000 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:20,007 - synthetic_data_kit.models.llm_client - INFO - batch_completion generated 8 outputs
+2025-08-22 18:00:20,008 - synthetic_data_kit.generators.qa_generator - INFO - Processing batch 2/3 with 8 chunks each ...
+2025-08-22 18:00:21,863 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:21,883 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:22,239 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:23,550 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:24,046 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:24,535 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:25,939 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:26,040 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:26,046 - synthetic_data_kit.models.llm_client - INFO - batch_completion generated 8 outputs
+2025-08-22 18:00:26,047 - synthetic_data_kit.generators.qa_generator - INFO - Processing batch 3/3 with 6 chunks each ...
+2025-08-22 18:00:27,686 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:27,875 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:28,567 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:28,848 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:30,509 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:31,392 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:31,398 - synthetic_data_kit.models.llm_client - INFO - batch_completion generated 6 outputs
+2025-08-22 18:00:31,399 - synthetic_data_kit.generators.qa_generator - INFO - Generated 22 outputs in batch inference with parser: parse_summary
+2025-08-22 18:00:31,400 - synthetic_data_kit.utils.config - INFO - Loading config from: D:\GitHub\synthetic-data-kit\configs\config.yaml
+2025-08-22 18:00:31,422 - synthetic_data_kit.utils.config - INFO - Config has LLM provider set to: api-endpoint
+2025-08-22 18:00:31,435 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-08-22 18:00:31,435 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-08-22 18:00:37,047 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-22 18:00:37,927 - httpx - INFO - HTTP Request: GET http://ubuntu.wsl.local:9000/api/v2/auth/identity "HTTP/1.1 200 OK"
+2025-08-22 18:00:37,928 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-22 18:00:38,688 - httpx - INFO - HTTP Request: GET http://ubuntu.wsl.local:9000/api/v2/tenants/default_tenant "HTTP/1.1 200 OK"
+2025-08-22 18:00:38,695 - httpx - INFO - HTTP Request: GET http://ubuntu.wsl.local:9000/api/v2/tenants/default_tenant/databases/default_database "HTTP/1.1 200 OK"
+2025-08-22 18:00:38,759 - httpx - INFO - HTTP Request: POST http://ubuntu.wsl.local:9000/api/v2/tenants/default_tenant/databases/default_database/collections "HTTP/1.1 200 OK"
+2025-08-22 18:00:39,340 - httpx - INFO - HTTP Request: POST http://ubuntu.wsl.local:9000/api/v2/tenants/default_tenant/databases/default_database/collections/a007e6d4-2edd-40fa-aa59-4c4f803db3ea/delete "HTTP/1.1 200 OK"
+2025-08-22 18:00:39,345 - httpx - INFO - HTTP Request: GET http://ubuntu.wsl.local:9000/api/v2/pre-flight-checks "HTTP/1.1 200 OK"
+2025-08-22 18:00:39,421 - httpx - INFO - HTTP Request: POST http://ubuntu.wsl.local:9000/api/v2/tenants/default_tenant/databases/default_database/collections/a007e6d4-2edd-40fa-aa59-4c4f803db3ea/add "HTTP/1.1 201 Created"
+2025-08-22 18:00:39,426 - httpx - INFO - HTTP Request: GET http://ubuntu.wsl.local:9000/api/v2/tenants/default_tenant/databases/default_database/collections/a007e6d4-2edd-40fa-aa59-4c4f803db3ea/count "HTTP/1.1 200 OK"
+2025-08-22 18:00:39,427 - synthetic_data_kit.utils.rag_processor - INFO - Loaded 78 chunks into synthetic_data_kit and synthetic_data_kit
+2025-08-22 18:00:39,570 - elastic_transport.transport - INFO - POST http://ubuntu.wsl.local:9200/synthetic_data_kit/_delete_by_query [status:200 duration:0.142s]
+2025-08-22 18:00:39,613 - elastic_transport.transport - INFO - PUT http://ubuntu.wsl.local:9200/_bulk [status:200 duration:0.037s]
+2025-08-22 18:00:39,614 - synthetic_data_kit.generators.qa_generator - INFO - 	Recursive summarization with internal RAG handling at level 2
+2025-08-22 18:00:39,615 - synthetic_data_kit.generators.qa_generator - INFO - Summarizing final chunks output of 9042 ...
+2025-08-22 18:00:48,097 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:00:48,102 - synthetic_data_kit.generators.qa_generator - INFO - Generating QA pairs, document split into 22 chunks, with 5 QA pairs in a chunk
+2025-08-22 18:00:48,102 - synthetic_data_kit.generators.qa_generator - INFO - Processing 22 chunks to generate 5 QA pairs per chunk...
+2025-08-22 18:00:48,103 - synthetic_data_kit.generators.qa_generator - INFO - Processing batch 1/3 with 8 chunks each ...
+2025-08-22 18:01:00,921 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:00,992 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:02,854 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:03,555 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:14,471 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:14,632 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:15,875 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:23,266 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:23,273 - synthetic_data_kit.models.llm_client - INFO - batch_completion generated 8 outputs
+2025-08-22 18:01:23,274 - synthetic_data_kit.generators.qa_generator - INFO - Processing batch 2/3 with 8 chunks each ...
+2025-08-22 18:01:34,613 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:36,686 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:38,054 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 18:01:42,695 - httpx - INFO - HTTP Request: POST https://open.bigmodel.cn/api/paas/v4/chat/completions "HTTP/1.1 200 OK"
+2025-08-26 09:16:30,318 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:16:30,318 - root - INFO - Starting web server with api-endpoint provider...
+2025-08-26 09:16:30,319 - root - INFO - Web interface available at: http://127.0.0.1:5000
+2025-08-26 09:16:30,319 - root - INFO - Press CTRL+C to stop the server.
+2025-08-26 09:16:30,319 - synthetic_data_kit.server.app - INFO - Run the Flask server: 127.0.0.1:5000
+2025-08-26 09:16:30,319 - synthetic_data_kit.server.app - INFO - Mode: production
+2025-08-26 09:16:30,348 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-08-26 09:16:30,349 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-26 09:18:23,886 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:18:23,929 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:23] "GET / HTTP/1.1" 200 -
+2025-08-26 09:18:24,197 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:24] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-26 09:18:26,692 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:26] "GET /ingest HTTP/1.1" 200 -
+2025-08-26 09:18:49,562 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:18:49,563 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:49] "GET / HTTP/1.1" 200 -
+2025-08-26 09:18:51,384 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:51] "GET /files HTTP/1.1" 200 -
+2025-08-26 09:18:54,935 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:18:54,936 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:54] "GET / HTTP/1.1" 200 -
+2025-08-26 09:18:58,275 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:18:58,317 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:18:58] "GET /create HTTP/1.1" 200 -
+2025-08-26 09:19:03,213 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:19:03,214 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:19:03] "GET / HTTP/1.1" 200 -
+2025-08-26 09:19:06,277 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:19:06] "GET /ingest HTTP/1.1" 200 -
+2025-08-26 09:19:22,875 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: ./data/pdf
+2025-08-26 09:19:24,296 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:19:24] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:19:31,462 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: ./data/pdf/*
+2025-08-26 09:19:31,464 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:19:31] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:20:30,651 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: ./data/pdf/*
+2025-08-26 09:20:33,132 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:20:33] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:44:25,402 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:44:25,404 - root - INFO - Starting web server with api-endpoint provider...
+2025-08-26 09:44:25,404 - root - INFO - Web interface available at: http://127.0.0.1:5000
+2025-08-26 09:44:25,404 - root - INFO - Press CTRL+C to stop the server.
+2025-08-26 09:44:25,405 - synthetic_data_kit.server.app - INFO - Run the Flask server: 127.0.0.1:5000
+2025-08-26 09:44:25,405 - synthetic_data_kit.server.app - INFO - Mode: production
+2025-08-26 09:44:25,452 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-08-26 09:44:25,452 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-26 09:45:05,993 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:45:06,030 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:45:06] "GET / HTTP/1.1" 200 -
+2025-08-26 09:45:11,866 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:45:11] "GET /ingest HTTP/1.1" 200 -
+2025-08-26 09:45:23,709 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:45:23] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:46:25,444 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:46:25] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:47:10,335 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:47:10,337 - root - INFO - Starting web server with api-endpoint provider...
+2025-08-26 09:47:10,337 - root - INFO - Web interface available at: http://127.0.0.1:5000
+2025-08-26 09:47:10,338 - root - INFO - Press CTRL+C to stop the server.
+2025-08-26 09:47:10,338 - synthetic_data_kit.server.app - INFO - Run the Flask server: 127.0.0.1:5000
+2025-08-26 09:47:10,338 - synthetic_data_kit.server.app - INFO - Mode: production
+2025-08-26 09:47:10,378 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-08-26 09:47:10,379 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-26 09:47:16,020 - flask_wtf.csrf - INFO - The CSRF token is invalid.
+2025-08-26 09:47:16,093 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:47:16] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:47:20,025 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:47:20] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:49:11,739 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:49:11] "POST /ingest HTTP/1.1" 200 -
+2025-08-26 09:54:28,388 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:54:28,389 - root - INFO - Starting web server with api-endpoint provider...
+2025-08-26 09:54:28,390 - root - INFO - Web interface available at: http://127.0.0.1:5000
+2025-08-26 09:54:28,390 - root - INFO - Press CTRL+C to stop the server.
+2025-08-26 09:54:28,390 - synthetic_data_kit.server.app - INFO - Run the Flask server: 127.0.0.1:5000
+2025-08-26 09:54:28,390 - synthetic_data_kit.server.app - INFO - Mode: production
+2025-08-26 09:54:28,427 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-08-26 09:54:28,428 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-26 09:54:58,912 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:54:58,971 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:54:58] "GET / HTTP/1.1" 200 -
+2025-08-26 09:55:01,893 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:55:01] "GET /ingest HTTP/1.1" 200 -
+2025-08-26 09:57:37,207 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:57:37,209 - root - INFO - Starting web server with api-endpoint provider...
+2025-08-26 09:57:37,210 - root - INFO - Web interface available at: http://127.0.0.1:5000
+2025-08-26 09:57:37,210 - root - INFO - Press CTRL+C to stop the server.
+2025-08-26 09:57:37,210 - synthetic_data_kit.server.app - INFO - Run the Flask server: 127.0.0.1:5000
+2025-08-26 09:57:37,210 - synthetic_data_kit.server.app - INFO - Mode: production
+2025-08-26 09:57:37,261 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-08-26 09:57:37,262 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-26 09:57:44,482 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:57:44,525 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:57:44] "GET / HTTP/1.1" 200 -
+2025-08-26 09:57:46,478 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:57:46] "GET /ingest HTTP/1.1" 200 -
+2025-08-26 09:58:10,454 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: ['data\\pdf\\A Study on the Chemical Compositions of the Yinqiaosan (Lonicerae and Forsythiae Powder) at Different Time of Later-decoction by Gas Chromatograph.pdf', 'data\\pdf\\Establishment of Quality Evaluation Method for Yinqiao Powder- A Herbal Formula against COVID-19 in China_DOI- 10.1155_2022_1748324.pdf', 'data\\pdf\\Explore scientific connotation of _taking when fragranceis volatilized fiercely_ for Yinqiao powder based on dynamic changes in contents of volati.pdf', 'data\\pdf\\Rapid identification of chemical constituents in Yinqiao powder using ultra-high-performance liquid chromatography coupled to quadrupole-time-of-f.pdf', 'data\\pdf\\The therapeutic effect of Yinqiaosan decoction against influenza A virus infection by regulating T cell receptor signaling pathway_DOI-\xa010.1016_j.pdf']
+2025-08-26 09:59:45,680 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:59:45,681 - root - INFO - Starting web server with api-endpoint provider...
+2025-08-26 09:59:45,681 - root - INFO - Web interface available at: http://127.0.0.1:5000
+2025-08-26 09:59:45,682 - root - INFO - Press CTRL+C to stop the server.
+2025-08-26 09:59:45,682 - synthetic_data_kit.server.app - INFO - Run the Flask server: 127.0.0.1:5000
+2025-08-26 09:59:45,682 - synthetic_data_kit.server.app - INFO - Mode: production
+2025-08-26 09:59:45,720 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-08-26 09:59:45,721 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-26 09:59:49,398 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 09:59:49,457 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:59:49] "GET / HTTP/1.1" 200 -
+2025-08-26 09:59:51,097 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 09:59:51] "GET /ingest HTTP/1.1" 200 -
+2025-08-26 10:00:07,271 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: data\pdf\A Study on the Chemical Compositions of the Yinqiaosan (Lonicerae and Forsythiae Powder) at Different Time of Later-decoction by Gas Chromatograph.pdf
+2025-08-26 10:00:13,647 - synthetic_data_kit.core.ingest - INFO - Ingest task completed: saved file: D:\GitHub\synthetic-data-kit\data\output\A Study on the Chemical Compositions of the Yinqiaosan (Lonicerae and Forsythiae Powder) at Different Time of Later-decoction by Gas Chromatograph.txt
+2025-08-26 10:00:28,641 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: data\pdf\Establishment of Quality Evaluation Method for Yinqiao Powder- A Herbal Formula against COVID-19 in China_DOI- 10.1155_2022_1748324.pdf
+2025-08-26 10:00:31,001 - synthetic_data_kit.core.ingest - INFO - Ingest task completed: saved file: D:\GitHub\synthetic-data-kit\data\output\Establishment of Quality Evaluation Method for Yinqiao Powder- A Herbal Formula against COVID-19 in China_DOI- 10.1155_2022_1748324.txt
+2025-08-26 10:00:31,001 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: data\pdf\Explore scientific connotation of _taking when fragranceis volatilized fiercely_ for Yinqiao powder based on dynamic changes in contents of volati.pdf
+2025-08-26 10:00:31,594 - synthetic_data_kit.core.ingest - INFO - Ingest task completed: saved file: D:\GitHub\synthetic-data-kit\data\output\Explore scientific connotation of _taking when fragranceis volatilized fiercely_ for Yinqiao powder based on dynamic changes in contents of volati.txt
+2025-08-26 10:00:31,595 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: data\pdf\Rapid identification of chemical constituents in Yinqiao powder using ultra-high-performance liquid chromatography coupled to quadrupole-time-of-f.pdf
+2025-08-26 10:01:45,503 - synthetic_data_kit.core.ingest - INFO - Ingest task completed: saved file: D:\GitHub\synthetic-data-kit\data\output\Rapid identification of chemical constituents in Yinqiao powder using ultra-high-performance liquid chromatography coupled to quadrupole-time-of-f.txt
+2025-08-26 10:01:45,504 - synthetic_data_kit.core.ingest - INFO - Ingest task started for file: data\pdf\The therapeutic effect of Yinqiaosan decoction against influenza A virus infection by regulating T cell receptor signaling pathway_DOI- 10.1016_j.pdf
+2025-08-26 10:01:47,904 - synthetic_data_kit.core.ingest - INFO - Ingest task completed: saved file: D:\GitHub\synthetic-data-kit\data\output\The therapeutic effect of Yinqiaosan decoction against influenza A virus infection by regulating T cell receptor signaling pathway_DOI- 10.1016_j.txt
+2025-08-26 10:01:47,917 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:01:47] "[32mPOST /ingest HTTP/1.1[0m" 302 -
+2025-08-26 10:01:48,061 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:01:48] "GET /view/data\\output\\The%20therapeutic%20effect%20of%20Yinqiaosan%20decoction%20against%20influenza%20A%20virus%20infection%20by%20regulating%20T%20cell%20receptor%20signaling%20pathway_DOI- 10.1016_j.txt HTTP/1.1" 200 -
+2025-08-26 10:02:53,802 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:02:53] "GET /files HTTP/1.1" 200 -
+2025-08-26 10:03:07,164 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 10:03:07,243 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:03:07] "GET /create HTTP/1.1" 200 -
+2025-08-26 10:03:15,807 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 10:03:15,809 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:03:15] "GET / HTTP/1.1" 200 -
+2025-08-26 10:03:37,932 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:03:37] "GET /files HTTP/1.1" 200 -
+2025-08-26 10:03:38,916 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:03:38] "GET /view/data\\output\\A%20Study%20on%20the%20Chemical%20Compositions%20of%20the%20Yinqiaosan%20(Lonicerae%20and%20Forsythiae%20Powder)%20at%20Different%20Time%20of%20Later-decoction%20by%20Gas%20Chromatograph.txt HTTP/1.1" 200 -
+2025-08-26 10:06:23,099 - synthetic_data_kit.utils.config - INFO - get_llm_provider returning: api-endpoint
+2025-08-26 10:06:23,100 - werkzeug - INFO - 127.0.0.1 - - [26/Aug/2025 10:06:23] "GET / HTTP/1.1" 200 -
